@@ -7471,7 +7471,7 @@ runFunction(function()
 	})
 end)
 
-pcall(function()
+runFunction(function()
 	local Rejoin = {}
 	Rejoin = GuiLibrary.ObjectsThatCanBeSaved.MatchmakingWindow.Api.CreateOptionsButton({
 		Name = 'Rejoin',
