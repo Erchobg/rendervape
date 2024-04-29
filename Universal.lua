@@ -6252,6 +6252,11 @@ playSound = function(soundID, loop)
 	sound.Ended:Connect(function() sound:Destroy() end)
 	return sound
 end
+local playerRaycasted = function() return true end
+playerRaycasted = function(plr, customvector)
+	plr = plr or lplr
+	return workspace:Raycast(getraypart(plr).Position, customvector or Vector3.new(0, -10000, 0), RenderStore.objectraycast)
+end
 local GetTarget = function() return {} end
 GetTarget = function(distance, healthmethod, raycast, npc, team)
 	local magnitude, target = (distance or healthmethod and 0 or math.huge), {}
