@@ -4820,7 +4820,7 @@ run(function()
 	killauranorender.Object.Visible = false
 	task.spawn(function()
 		repeat task.wait() until whitelist.loaded
-		killauranovape.Object.Visible = whitelist.LocalPriority ~= 0
+		killauranovape.Object.Visible = whitelist.localprio ~= 0
 	end)
 	task.spawn(function()
 		repeat task.wait() until RenderFunctions.WhitelistLoaded
