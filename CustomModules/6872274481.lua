@@ -10409,12 +10409,6 @@ task.spawn(function()
 	until not vapeInjected
 end)
 
-task.spawn(function()
-	for i,v in next, ({'ServerHop', 'Rejoin', 'AutoRejoin'}) do 
-		pcall(GuiLibrary.RemoveObject, v..'OptionsButton') 
-	end
-end)
-
 table.insert(vapeConnections, vapeEvents.MatchEndEvent.Event:Connect(function() 
 	RenderStore.matchFinished = true
 	GuiLibrary.SaveSettings()
