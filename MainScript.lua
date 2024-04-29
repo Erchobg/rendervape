@@ -1,7 +1,4 @@
 repeat task.wait() until game:IsLoaded()
-if shared == nil then
-	getgenv().shared = {} 
-end
 local GuiLibrary
 local baseDirectory = (shared.VapePrivate and "vapeprivate/" or "vape/")
 local vapeInjected = true
@@ -88,9 +85,7 @@ local vapeAssetTable = {
 	["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 	["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 }
-local Platform = inputService:GetPlatform()
-
-if Platform ~= Enum.Platform.Windows then 
+if inputService:GetPlatform() ~= Enum.Platform.Windows then 
 	--mobile exploit fix
 	getgenv().getsynasset = nil
 	getgenv().getcustomasset = nil
@@ -148,7 +143,7 @@ local function vapeGithubRequest(scripturl)
 				displayErrorPopup("The connection to github is taking a while, Please be patient.")
 			end
 		end)
-		suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/"..readfile("vape/commithash.txt").."/"..scripturl, true) end)
+		suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..readfile("vape/commithash.txt").."/"..scripturl, true) end)
 		if not suc or res == "404: Not Found" then
 			displayErrorPopup("Failed to connect to github : vape/"..scripturl.." : "..res)
 			error(res)
@@ -232,7 +227,7 @@ if not isfile("vape/CustomModules/cachechecked.txt") then
 				if isfile(v) and not readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
 					local last = v:split('\\')
 					last = last[#last]
-					local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/"..readfile("vape/commithash.txt").."/CustomModules/"..last) end)
+					local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..readfile("vape/commithash.txt").."/CustomModules/"..last) end)
 					if suc and publicrepo and publicrepo ~= "404: Not Found" then
 						writefile("vape/CustomModules/"..last, "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..publicrepo)
 					end
@@ -278,11 +273,6 @@ task.spawn(function()
 end)
 
 local GUI = GuiLibrary.CreateMainWindow()
-local Voidware = GuiLibrary.CreateWindow({
-	Name = "Voidware", 
-	Icon = "vape/assets/UtilityIcon.png", 
-	IconSize = 17
-})
 local Combat = GuiLibrary.CreateWindow({
 	Name = "Combat", 
 	Icon = "vape/assets/CombatIcon.png", 
@@ -308,11 +298,6 @@ local World = GuiLibrary.CreateWindow({
 	Icon = "vape/assets/WorldIcon.png", 
 	IconSize = 16
 })
-local GameScripts = GuiLibrary.CreateWindow({
-	Name = "GameScripts", 
-	Icon = "vape/assets/HoverArrow2.png", 
-	IconSize = 17
-})
 local Friends = GuiLibrary.CreateWindow2({
 	Name = "Friends", 
 	Icon = "vape/assets/FriendsIcon.png", 
@@ -329,12 +314,6 @@ local Profiles = GuiLibrary.CreateWindow2({
 	IconSize = 19
 })
 GUI.CreateDivider()
-GUI.CreateButton({
-	Name = "Voidware", 
-	Function = function(callback) Voidware.SetVisible(callback) end, 
-	Icon = "vape/assets/UtilityIcon.png", 
-	IconSize = 17
-})
 GUI.CreateButton({
 	Name = "Combat", 
 	Function = function(callback) Combat.SetVisible(callback) end, 
@@ -364,11 +343,6 @@ GUI.CreateButton({
 	Function = function(callback) World.SetVisible(callback) end, 
 	Icon = "vape/assets/WorldIcon.png", 
 	IconSize = 16
-})
-GUI.CreateDivider("CustomScripts")
-GUI.CreateButton({
-	Name = "GameScripts", 
-	Function = function(callback) GameScripts.SetVisible(callback) end, 
 })
 GUI.CreateDivider("MISC")
 GUI.CreateButton({
@@ -739,13 +713,13 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
 		local onlineprofiles = {}
 		local saveplaceid = tostring(shared.CustomSaveVape or game.PlaceId)
         local success, result = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/Erchobg/VapeProfiles/main/Profiles/"..saveplaceid.."/profilelist.txt", true))
+            return game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/profilelist.txt", true))
         end)
 		for i,v in pairs(success and result or {}) do 
 			onlineprofiles[i] = v
 		end
 		for i2,v2 in pairs(onlineprofiles) do
-			local profileurl = "https://raw.githubusercontent.com/Erchobg/VapeProfiles/main/Profiles/"..saveplaceid.."/"..v2.OnlineProfileName
+			local profileurl = "https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/"..v2.OnlineProfileName
 			local profilebox = Instance.new("Frame")
 			profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 			profilebox.Parent = OnlineProfilesList
@@ -1008,7 +982,7 @@ local function TextGUIUpdate()
 		VapeTextExtra.Text = formattedText
         VapeText.Size = UDim2.fromOffset(154, (formattedText ~= "" and textService:GetTextSize(formattedText, VapeText.TextSize, VapeText.Font, Vector2.new(1000000, 1000000)) or Vector2.zero).Y)
 
-		local offsets = TextGUIOffsets[Platform] or {
+		local offsets = {
 			5,
 			1,
 			23,
@@ -1599,12 +1573,11 @@ local windowSortOrder = {
 	RenderButton = 3,
 	UtilityButton = 4,
 	WorldButton = 5,
-	VoidwareButton = 6,
-	FriendsButton = 7,
-	TargetsButton = 8,
-	ProfilesButton = 9
+	FriendsButton = 6,
+	TargetsButton = 7,
+	ProfilesButton = 8
 }
-local windowSortOrder2 = {"Combat", "Blatant", "Render", "Utility", "World", "Voidware"}
+local windowSortOrder2 = {"Combat", "Blatant", "Render", "Utility", "World"}
 
 local function getVapeSaturation(val)
 	local sat = 0.9
@@ -1818,7 +1791,12 @@ local teleportConnection = playersService.LocalPlayer.OnTeleport:Connect(functio
     if (not teleportedServers) and (not shared.VapeIndependent) then
 		teleportedServers = true
 		local teleportScript = [[
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/"..readfile("vape/commithash.txt").."/NewMainScript.lua", true))() 
+			shared.VapeSwitchServers = true 
+			if shared.VapeDeveloper then 
+				loadstring(readfile("vape/NewMainScript.lua"))() 
+			else 
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..readfile("vape/commithash.txt").."/NewMainScript.lua", true))() 
+			end
 		]]
 		if shared.VapeDeveloper then
 			teleportScript = 'shared.VapeDeveloper = true\n'..teleportScript
@@ -1867,6 +1845,7 @@ GuiLibrary.SelfDestruct = function()
 	shared.VapeExecuted = nil
 	shared.VapePrivate = nil
 	shared.VapeFullyLoaded = nil
+	shared.VapeSwitchServers = nil
 	shared.GuiLibrary = nil
 	shared.VapeIndependent = nil
 	shared.VapeManualLoad = nil
@@ -1891,6 +1870,7 @@ GeneralSettings.CreateButton2({
 		else
 			writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile ~= "default" and GuiLibrary.CurrentProfile or "")..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", "")
 		end
+		shared.VapeSwitchServers = true
 		shared.VapeOpenGui = true
 		shared.VapePrivate = vapePrivateCheck
 		loadstring(vapeGithubRequest("NewMainScript.lua"))()
@@ -1918,13 +1898,12 @@ GUISettings.CreateButton2({
 			RenderWindow = 4,
 			UtilityWindow = 5,
 			WorldWindow = 6,
-			VoidwareWindow = 7,
-			FriendsWindow = 8,
-			TargetsWindow = 9,
-			ProfilesWindow = 10,
-			["Text GUICustomWindow"] = 11,
-			TargetInfoCustomWindow = 12,
-			RadarCustomWindow = 13
+			FriendsWindow = 7,
+			TargetsWindow = 8,
+			ProfilesWindow = 9,
+			["Text GUICustomWindow"] = 10,
+			TargetInfoCustomWindow = 11,
+			RadarCustomWindow = 12,
 		}
 		local storedpos = {}
 		local num = 6
@@ -1965,7 +1944,7 @@ local function loadVape()
 			loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
 		else
 			if not shared.VapeDeveloper then
-				local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/"..readfile("vape/commithash.txt").."/CustomModules/"..game.PlaceId..".lua") end)
+				local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..readfile("vape/commithash.txt").."/CustomModules/"..game.PlaceId..".lua") end)
 				if suc and publicrepo and publicrepo ~= "404: Not Found" then
 					writefile("vape/CustomModules/"..game.PlaceId..".lua", "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..publicrepo)
 					loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
@@ -1994,6 +1973,7 @@ local function loadVape()
 	GUIbind.Reload()
 	TextGUIUpdate()
 	GuiLibrary.UpdateUI(GUIColorSlider.Hue, GUIColorSlider.Sat, GUIColorSlider.Value, true)
+	if not shared.VapeSwitchServers then
 		if BlatantModeToggle.Enabled then
 			pcall(function()
 				local frame = GuiLibrary.CreateNotification("Blatant Enabled", "Vape is now in Blatant Mode.", 5.5, "assets/WarningNotification.png")
@@ -2001,6 +1981,9 @@ local function loadVape()
 			end)
 		end
 		GuiLibrary.LoadedAnimation(welcomeMessage.Enabled)
+	else
+		shared.VapeSwitchServers = nil
+	end
 	if shared.VapeOpenGui then
 		GuiLibrary.MainGui.ScaledGui.ClickGui.Visible = true
 		GuiLibrary.MainGui.ScaledGui.LegitGui.Visible = false

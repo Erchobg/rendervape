@@ -1,4 +1,4 @@
---[[ 
+--[[
 	Credits
 	Infinite Yield - Blink
 	Please notify me if you need credits
@@ -23,7 +23,7 @@ local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
 	else
-		return game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/main/"..scripturl, true)
+		return game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/main/"..scripturl, true)
 	end
 end
 local bettergetfocus = function()
@@ -32,13 +32,12 @@ local bettergetfocus = function()
 		if game:GetService("TextChatService").ChatVersion == "TextChatService" then
 			return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
 		elseif game:GetService("TextChatService").ChatVersion == "LegacyChatService" then
-			return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+			return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil)
 		end
 	end
 	return game:GetService("UserInputService"):GetFocusedTextBox()
 end
 local entity = shared.vapeentity
-local WhitelistFunctions = shared.vapewhitelist
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
 local teleportfunc
 local betterisfile = function(file)
@@ -59,7 +58,7 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 			StatusCode = 404
 		}
 	end
-end 
+end
 local getasset = getsynasset or getcustomasset
 local storedshahashes = {}
 local oldchanneltab
@@ -67,7 +66,7 @@ local oldchannelfunc
 local oldchanneltabs = {}
 local networkownertick = tick()
 local networkownerfunc = isnetworkowner or function(part)
-	if gethiddenproperty(part, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then 
+	if gethiddenproperty(part, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
 		networkownertick = tick() + 8
 	end
@@ -79,7 +78,7 @@ local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
 	else
-		return game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/main/"..scripturl, true)
+		return game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/main/"..scripturl, true)
 	end
 end
 
@@ -90,15 +89,15 @@ end
 
 local function getSpeedMultiplier(reduce)
 	local speed = 1
-	if lplr.Character then 
+	if lplr.Character then
 		local speedboost = lplr.Character:GetAttribute("SpeedBoost")
-		if speedboost and speedboost > 1 then 
+		if speedboost and speedboost > 1 then
 			speed = speed + (speedboost - 1)
 		end
-		if lplr.Character:GetAttribute("GrimReaperChannel") then 
+		if lplr.Character:GetAttribute("GrimReaperChannel") then
 			speed = speed + 0.6
 		end
-		if lplr.Character:GetAttribute("SpeedPieBuff") then 
+		if lplr.Character:GetAttribute("SpeedPieBuff") then
 			speed = speed + (queueType == "SURVIVAL" and 0.15 or 0.3)
 		end
 	end
@@ -147,7 +146,7 @@ do
 	end
 end
 
-local function runFunction(func)
+local function runcode(func)
 	func()
 end
 
@@ -191,12 +190,12 @@ local function getcustomassetfunc(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
-			Url = "https://raw.githubusercontent.com/Erchobg/vapevoidware/main/"..path:gsub("vape/assets", "assets"),
+			Url = "https://raw.githubusercontent.com/Erchobg/rendervape/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})
 		writefile(path, req.Body)
 	end
-	return getasset(path) 
+	return getasset(path)
 end
 
 local function isAlive(plr)
@@ -215,7 +214,7 @@ local function createwarning(title, text, delay)
 	return (suc and res)
 end
 
-runFunction(function()
+runcode(function()
     local flaggedremotes = {"SelfReport"}
 
     getfunctions = function()
@@ -281,34 +280,6 @@ GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 	end
 end)
 
-local function getNametagString(plr)
-	local nametag = ""
-	if WhitelistFunctions:CheckPlayerType(plr) == "VAPE PRIVATE" then
-		nametag = '<font color="rgb(127, 0, 255)">[VAPE PRIVATE] '..(plr.DisplayName or plr.Name)..'</font>'
-	end
-	if WhitelistFunctions:CheckPlayerType(plr) == "VAPE OWNER" then
-		nametag = '<font color="rgb(255, 80, 80)">[VAPE OWNER] '..(plr.DisplayName or plr.Name)..'</font>'
-	end
-	if WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)] then
-		local data = WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]
-		local newnametag = ""
-		if data.Tags then
-			for i2,v2 in pairs(data.Tags) do
-				newnametag = newnametag..'<font color="rgb('..math.floor(v2.TagColor.r)..', '..math.floor(v2.TagColor.g)..', '..math.floor(v2.TagColor.b)..')">['..v2.TagText..']</font> '
-			end
-		end
-		nametag = newnametag..(newnametag.NameColor and '<font color="rgb('..math.floor(newnametag.NameColor.r)..', '..math.floor(newnametag.NameColor.g)..', '..math.floor(newnametag.NameColor.b)..')">' or '')..(plr.DisplayName or plr.Name)..(newnametag.NameColor and '</font>' or '')
-	end
-	return nametag
-end
-
-local AnticheatBypassNumbers = {
-	TPSpeed = 0.1,
-	TPCombat = 0.3,
-	TPLerp = 0.39,
-	TPCheck = 15
-}
-
 local function friendCheck(plr, recolor)
 	if GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] then
 		local friend = (table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectList"], plr.Name) and GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectListEnabled"][table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectList"], plr.Name)] and true or nil)
@@ -320,42 +291,6 @@ local function friendCheck(plr, recolor)
 	end
 	return nil
 end
-
-local function renderNametag(plr)
-	if WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)] then
-		local playerlist = game:GetService("CoreGui"):FindFirstChild("PlayerList")
-		if playerlist then
-			pcall(function()
-				local playerlistplayers = playerlist.PlayerListMaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame.ScrollingFrameContainer.ScrollingFrameClippingFrame.ScollingFrame.OffsetUndoFrame
-				local targetedplr = playerlistplayers:FindFirstChild("p_"..plr.UserId)
-				if targetedplr then 
-					targetedplr.ChildrenFrame.NameFrame.BGFrame.OverlayFrame.PlayerIcon.Image = getcustomassetfunc("vape/assets/VapeIcon.png")
-				end
-			end)
-		end
-		local nametag = getNametagString(plr)
-		plr.CharacterAdded:Connect(function(char)
-			if char ~= oldchar then
-				pcall(function() 
-					bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
-				end)
-			end
-		end)
-		if plr.Character and plr.Character ~= oldchar then
-			task.spawn(function()
-				pcall(function() 
-					bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
-				end)
-			end)
-		end
-	end
-end
-
-task.spawn(function()
-	repeat task.wait() until WhitelistFunctions.Loaded
-	for i,v in pairs(players:GetChildren()) do renderNametag(v) end
-	players.PlayerAdded:Connect(renderNametag)
-end)
 
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
@@ -393,13 +328,13 @@ Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOption
 				until Sprint["Enabled"] == false
 			end)
 		end
-	end, 
+	end,
 	["HoverText"] = "Sets your sprinting to true."
 })
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local flymissile
-runFunction(function()
+runcode(function()
 	local OldNoFallFunction
 	local flyspeed = {["Value"] = 40}
 	local flyverticalspeed = {["Value"] = 40}
@@ -442,7 +377,7 @@ runFunction(function()
 						flydown = false
 					end
 				end)
-				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
+				RunLoops:BindToHeartbeat("Fly", 1, function(delta)
 					if isAlive() then
 						local mass = (lplr.Character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						mass = mass + 3 * (tick() % 0.4 < 0.2 and -1 or 1)
@@ -468,25 +403,25 @@ runFunction(function()
 		["Name"] = "Speed",
 		["Min"] = 1,
 		["Max"] = 23,
-		["Function"] = function(val) end, 
+		["Function"] = function(val) end,
 		["Default"] = 23
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
 		["Min"] = 1,
 		["Max"] = 100,
-		["Function"] = function(val) end, 
+		["Function"] = function(val) end,
 		["Default"] = 44
 	})
 	flyupanddown = fly.CreateToggle({
 		["Name"] = "Y Level",
-		["Function"] = function() end, 
+		["Function"] = function() end,
 		["Default"] = true
 	})
 end)
 
 local function findfrom(name)
-	for i,v in pairs(bedwars["QueueMeta"]) do 
+	for i,v in pairs(bedwars["QueueMeta"]) do
 		if v.title == name and i:find("voice") == nil then
 			return i
 		end
@@ -495,9 +430,9 @@ local function findfrom(name)
 end
 
 local QueueTypes = {}
-for i,v in pairs(bedwars["QueueMeta"]) do 
+for i,v in pairs(bedwars["QueueMeta"]) do
 	if v.title:find("Test") == nil then
-		table.insert(QueueTypes, v.title..(i:find("voice") and " (VOICE)" or "")) 
+		table.insert(QueueTypes, v.title..(i:find("voice") and " (VOICE)" or ""))
 	end
 end
 local JoinQueue = {["Enabled"] = false}
@@ -547,7 +482,7 @@ JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 JoinQueueTypes = JoinQueue.CreateDropdown({
 	["Name"] = "Mode",
 	["List"] = QueueTypes,
-	["Function"] = function(val) 
+	["Function"] = function(val)
 		if JoinQueue["Enabled"] and firstqueue == false then
 			JoinQueue["ToggleButton"](false)
 			JoinQueue["ToggleButton"](true)
@@ -562,7 +497,7 @@ JoinQueueDelay = JoinQueue.CreateSlider({
 	["Default"] = 1
 })
 
-runFunction(function()
+runcode(function()
 	local AutoKitTextList = {["ObjectList"] = {}, ["RefreshValues"] = function() end}
 
 	local function betterfindkit()
@@ -643,7 +578,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+runcode(function()
 	local CameraFix = {["Enabled"] = false}
 	CameraFix = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "CameraFix",
@@ -667,7 +602,7 @@ local Scaffold = {["Enabled"] = false}
 local longjump = {["Enabled"] = false}
 local flyvelo
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
-runFunction(function()
+runcode(function()
 	local speedmode = {["Value"] = "Normal"}
 	local speedval = {["Value"] = 1}
 	local speedjump = {["Enabled"] = false}
@@ -702,8 +637,8 @@ runFunction(function()
 						end
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
-							if speedspeedup["Enabled"] and killauranear ~= lastnear then 
-								if killauranear then 
+							if speedspeedup["Enabled"] and killauranear ~= lastnear then
+								if killauranear then
 									speedtick = tick() + 5
 								else
 									speedtick = 0
@@ -743,27 +678,27 @@ runFunction(function()
 				if bodyvelo then
 					bodyvelo:Remove()
 				end
-				if entity.isAlive then 
-					for i,v in pairs(entity.character.HumanoidRootPart:GetChildren()) do 
-						if v:IsA("BodyVelocity") then 
+				if entity.isAlive then
+					for i,v in pairs(entity.character.HumanoidRootPart:GetChildren()) do
+						if v:IsA("BodyVelocity") then
 							v:Remove()
 						end
 					end
 				end
 			end
-		end, 
+		end,
 		["HoverText"] = "Increases your movement."
 	})
 	speedmode = speed.CreateDropdown({
 		["Name"] = "Mode",
 		["List"] = {"Normal", "CFrame"},
 		["Function"] = function(val)
-			if speedspeedup["Object"] then 
+			if speedspeedup["Object"] then
 				speedspeedup["Object"].Visible = val == "CFrame"
 			end
 			if bodyvelo then
 				bodyvelo:Remove()
-			end	
+			end
 		end
 	})
 	speedval = speed.CreateSlider({
@@ -781,8 +716,8 @@ runFunction(function()
 		["Function"] = function() end
 	})
 	speedjump = speed.CreateToggle({
-		["Name"] = "AutoJump", 
-		["Function"] = function(callback) 
+		["Name"] = "AutoJump",
+		["Function"] = function(callback)
 			if speedjumpalways["Object"] then
 				speedjump["Object"].ToggleArrow.Visible = callback
 				speedjumpalways["Object"].Visible = callback
@@ -810,7 +745,7 @@ runFunction(function()
 	speedjumpalways["Object"].Visible = speedjump["Enabled"]
 end)
 
-runFunction(function()
+runcode(function()
 	local AnticheatBypassTransparent = {["Enabled"] = false}
 	local AnticheatBypassAlternate = {["Enabled"] = false}
 	local AnticheatBypassNotification = {["Enabled"] = false}
@@ -859,21 +794,21 @@ runFunction(function()
 		clone.CFrame = oldcloneroot.CFrame
 		lplr.Character.PrimaryPart = clone
 		lplr.Character.Parent = workspace
-		for i,v in pairs(lplr.Character:GetDescendants()) do 
-			if v:IsA("Weld") or v:IsA("Motor6D") then 
+		for i,v in pairs(lplr.Character:GetDescendants()) do
+			if v:IsA("Weld") or v:IsA("Motor6D") then
 				if v.Part0 == oldcloneroot then v.Part0 = clone end
 				if v.Part1 == oldcloneroot then v.Part1 = clone end
 			end
-			if v:IsA("BodyVelocity") then 
+			if v:IsA("BodyVelocity") then
 				v:Destroy()
 			end
 		end
-		for i,v in pairs(oldcloneroot:GetChildren()) do 
-			if v:IsA("BodyVelocity") then 
+		for i,v in pairs(oldcloneroot:GetChildren()) do
+			if v:IsA("BodyVelocity") then
 				v:Destroy()
 			end
 		end
-		if hip then 
+		if hip then
 			lplr.Character.Humanoid.HipHeight = hip
 		end
 		hip = lplr.Character.Humanoid.HipHeight
@@ -884,7 +819,7 @@ runFunction(function()
 		pcall(function()
 			RunLoops:UnbindFromHeartbeat("AnticheatBypass")
 		end)
-		local oldseat 
+		local oldseat
 		local oldseattab = Instance.new("BindableEvent")
 		RunLoops:BindToHeartbeat("AnticheatBypass", 1, function()
 			if oldcloneroot and clone then
@@ -893,8 +828,8 @@ runFunction(function()
 					oldcloneroot.Velocity = clone.Velocity
 				else
 					local sit = entity.character.Humanoid.Sit
-					if sit ~= oldseat then 
-						oldseat = sit	
+					if sit ~= oldseat then
+						oldseat = sit
 					end
 					local targetvelo = (clone.AssemblyLinearVelocity)
 					local speed = (sit and targetvelo.Magnitude or 20 * getSpeedMultiplier())
@@ -917,7 +852,7 @@ runFunction(function()
 
 		local function getaverageframerate()
 			local frames = 0
-			for i,v in pairs(fpslist) do 
+			for i,v in pairs(fpslist) do
 				frames = frames + v
 			end
 			return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 or AnticheatBypassAlternate["Enabled"]
@@ -925,15 +860,15 @@ runFunction(function()
 
 		local function didpingspike()
 			local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-			for i,v in pairs(fpslist) do 
+			for i,v in pairs(fpslist) do
 				print("anticheatbypass fps ["..i.."]: "..v)
-				if v < 40 then 
+				if v < 40 then
 					return v.." fps"
 				end
 			end
-			for i,v in pairs(pinglist) do 
+			for i,v in pairs(pinglist) do
 				print("anticheatbypass ping ["..i.."]: "..v)
-				if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
+				if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then
 					return currentpingcheck.." => "..v.." ping"
 				else
 					currentpingcheck = v
@@ -943,8 +878,8 @@ runFunction(function()
 		end
 
 		local function notlasso()
-			for i,v in pairs(game:GetService("CollectionService"):GetTagged("LassoHooked")) do 
-				if v == lplr.Character then 
+			for i,v in pairs(game:GetService("CollectionService"):GetTagged("LassoHooked")) do
+				if v == lplr.Character then
 					return false
 				end
 			end
@@ -958,10 +893,10 @@ runFunction(function()
 				if (not AnticheatBypass["Enabled"]) then break end
 				local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 				local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
-				if #pinglist >= 10 then 
+				if #pinglist >= 10 then
 					table.remove(pinglist, 1)
 				end
-				if #fpslist >= 10 then 
+				if #fpslist >= 10 then
 					table.remove(fpslist, 1)
 				end
 				table.insert(pinglist, ping)
@@ -980,7 +915,7 @@ runFunction(function()
 			Head = entity.character.Head,
 			HumanoidRootPart = oldcloneroot
 		}
-		if shared.VapeOverrideAnticheatBypassPre then 
+		if shared.VapeOverrideAnticheatBypassPre then
 			shared.VapeOverrideAnticheatBypassPre(lplr.Character)
 		end
 		repeat
@@ -998,7 +933,7 @@ runFunction(function()
 								lagbackchanged = true
 								lagbacktime = tick()
 								task.spawn(function()
-									local pingspike = didpingspike() 
+									local pingspike = didpingspike()
 									if pingspike then
 										if AnticheatBypassNotification["Enabled"] then
 											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
@@ -1032,13 +967,13 @@ runFunction(function()
 							lagbacknotification = false
 							if not shared.VapeOverrideAnticheatBypass then
 								if (not disabletpcheck) and entity.character.Humanoid.Sit ~= true then
-									anticheatfunnyyes = true 
+									anticheatfunnyyes = true
 									local frameratecheck = getaverageframerate()
 									local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.22 or 0
 									local framerate2 = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.01 or 0
 									framerate = math.floor((AnticheatBypassNumbers.TPLerp + framerate) * 100) / 100
 									framerate2 = math.floor((AnticheatBypassNumbers.TPSpeed + framerate2) * 100) / 100
-									for i = 1, 2 do 
+									for i = 1, 2 do
 										check()
 										task.wait(i % 2 == 0 and 0.01 or 0.02)
 										check()
@@ -1077,7 +1012,7 @@ runFunction(function()
 					end
 				end
 			end
-		until AnticheatBypass["Enabled"] == false or oldcloneroot == nil or oldcloneroot.Parent == nil 
+		until AnticheatBypass["Enabled"] == false or oldcloneroot == nil or oldcloneroot.Parent == nil
 	end
 
 	local spawncoro
@@ -1158,34 +1093,34 @@ runFunction(function()
 				--	anticheatbypassenable()
 				end)
 			else
-				if anticheatconnection then 
+				if anticheatconnection then
 					anticheatconnection:Disconnect()
 				end
 				pcall(function() RunLoops:UnbindFromHeartbeat("AnticheatBypass") end)
-				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil then 
+				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil then
 					lplr.Character.Parent = game
 					oldcloneroot.Parent = lplr.Character
 					lplr.Character.PrimaryPart = oldcloneroot
 					lplr.Character.Parent = workspace
 					oldcloneroot.CanCollide = true
 					oldcloneroot.Transparency = 1
-					for i,v in pairs(lplr.Character:GetDescendants()) do 
-						if v:IsA("Weld") or v:IsA("Motor6D") then 
+					for i,v in pairs(lplr.Character:GetDescendants()) do
+						if v:IsA("Weld") or v:IsA("Motor6D") then
 							if v.Part0 == clone then v.Part0 = oldcloneroot end
 							if v.Part1 == clone then v.Part1 = oldcloneroot end
 						end
-						if v:IsA("BodyVelocity") then 
+						if v:IsA("BodyVelocity") then
 							v:Destroy()
 						end
 					end
-					for i,v in pairs(oldcloneroot:GetChildren()) do 
-						if v:IsA("BodyVelocity") then 
+					for i,v in pairs(oldcloneroot:GetChildren()) do
+						if v:IsA("BodyVelocity") then
 							v:Destroy()
 						end
 					end
 					lplr.Character.Humanoid.HipHeight = hip or 2
 				end
-				if clone then 
+				if clone then
 					clone:Destroy()
 					clone = nil
 				end
@@ -1196,7 +1131,7 @@ runFunction(function()
 	})
 	local arrowdodgeconnection
 	local arrowdodgedata
-	
+
 --[[	AnticheatBypassArrowDodge = AnticheatBypass.CreateToggle({
 		["Name"] = "Arrow Dodge",
 		["Function"] = function(callback)
@@ -1211,13 +1146,13 @@ runFunction(function()
 								local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 								local multigrav = gravity
 								local offsetshootpos = data.position
-								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
-								local calculated2 = FindLeadShot(pos, Vector3.zero, (Vector3.zero - data.launchVelocity).magnitude, offsetshootpos, Vector3.zero, multigrav) 
+								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0))
+								local calculated2 = FindLeadShot(pos, Vector3.zero, (Vector3.zero - data.launchVelocity).magnitude, offsetshootpos, Vector3.zero, multigrav)
 								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.zero - data.launchVelocity).magnitude, gravity, false)
 								local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
 								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.zero - data.launchVelocity).magnitude
 								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.zero - data.launchVelocity).magnitude
-								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then 
+								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then
 									oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.6)
 								end
 							end
@@ -1225,7 +1160,7 @@ runFunction(function()
 					end)
 				end)
 			else
-				if arrowdodgeconnection then 
+				if arrowdodgeconnection then
 					arrowdodgeconnection:Disconnect()
 				end
 			end
@@ -1239,7 +1174,7 @@ runFunction(function()
 	})
 	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
 		["Name"] = "Transparent",
-		["Function"] = function(callback) 
+		["Function"] = function(callback)
 			if oldcloneroot and AnticheatBypass["Enabled"] then
 				oldcloneroot.Transparency = callback and 1 or 0
 			end
@@ -1254,17 +1189,17 @@ runFunction(function()
 	local changecheck = false
 --[[	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
 		["Name"] = "Combat Check",
-		["Function"] = function(callback) 
-			if callback then 
+		["Function"] = function(callback)
+			if callback then
 				task.spawn(function()
-					repeat 
+					repeat
 						task.wait(0.1)
 						if (not AnticheatBypassCombatCheck["Enabled"]) then break end
-						if AnticheatBypass["Enabled"] then 
+						if AnticheatBypass["Enabled"] then
 							local plrs = GetAllNearestHumanoidToPosition(true, 30, 1)
 							combatcheck = #plrs > 0 and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"])
-							if combatcheck ~= changecheck then 
-								if not combatcheck then 
+							if combatcheck ~= changecheck then
+								if not combatcheck then
 									combatchecktick = tick() + 1
 								end
 								changecheck = combatcheck
@@ -1283,10 +1218,10 @@ runFunction(function()
 		["Function"] = function() end,
 		["Default"] = true
 	})
-	if shared.VapeDeveloper then 
+	if shared.VapeDeveloper then
 		AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
 			["Name"] = "TPSpeed",
-			["Function"] = function(val) 
+			["Function"] = function(val)
 				AnticheatBypassNumbers.TPSpeed = val / 100
 			end,
 			["Double"] = 100,
@@ -1296,7 +1231,7 @@ runFunction(function()
 		})
 		AnticheatBypassTPLerp = AnticheatBypass.CreateSlider({
 			["Name"] = "TPLerp",
-			["Function"] = function(val) 
+			["Function"] = function(val)
 				AnticheatBypassNumbers.TPLerp = val / 100
 			end,
 			["Double"] = 100,
@@ -1307,7 +1242,7 @@ runFunction(function()
 	end
 end)
 
-runFunction(function()
+runcode(function()
 	local transformed = false
 	local OldBedwars = {["Enabled"] = false}
 	local themeselected = {["Value"] = "OldBedwars"}
@@ -1569,23 +1504,23 @@ runFunction(function()
 						end
 					end
 				end)
-				for i,v in pairs(bedwars["ItemTable"]) do 
-					if oldbedwarsicontab[i] then 
+				for i,v in pairs(bedwars["ItemTable"]) do
+					if oldbedwarsicontab[i] then
 						v.image = oldbedwarsicontab[i]
 					end
-				end			
-				for i,v in pairs(oldbedwarssoundtable) do 
+				end
+				for i,v in pairs(oldbedwarssoundtable) do
 					local item = bedwars["SoundList"][i]
 					if item then
 						bedwars["SoundList"][i] = v
 					end
-				end	
+				end
 				local oldweld = bedwars["WeldTable"].weldCharacterAccessories
 				local alreadydone = {}
 				bedwars["WeldTable"].weldCharacterAccessories = function(self, model, ...)
 					for i,v in pairs(model:GetChildren()) do
 						local died = v.Name == "HumanoidRootPart" and v:FindFirstChild("Died")
-						if died then 
+						if died then
 							died.Volume = 0
 						end
 						if oldbedwarsblocktab[v.Name] then
@@ -1647,7 +1582,7 @@ runFunction(function()
 				lighting.Sky.SkyboxUp = "rbxassetid://7018689553"
 			end)
 		end,
-		Winter = function() 
+		Winter = function()
 			task.spawn(function()
 				for i,v in pairs(lighting:GetChildren()) do
 					if v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("PostEffect") then
@@ -1770,8 +1705,8 @@ runFunction(function()
 
 	OldBedwars = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "GameTheme",
-		["Function"] = function(callback) 
-			if callback then 
+		["Function"] = function(callback)
+			if callback then
 				if not transformed then
 					transformed = true
 					themefunctions[themeselected["Value"]]()
@@ -1793,11 +1728,11 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+runcode(function()
 	local tpstring = shared.vapeoverlay or nil
 	local origtpstring = tpstring
 	local Overlay = GuiLibrary.CreateCustomWindow({
-		["Name"] = "Overlay", 
+		["Name"] = "Overlay",
 		["Icon"] = "vape/assets/TargetIcon1.png",
 		["IconSize"] = 16
 	})
@@ -1841,7 +1776,7 @@ runFunction(function()
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
 	local OverlayFonts = {"Arial"}
-	for i,v in pairs(Enum.Font:GetEnumItems()) do 
+	for i,v in pairs(Enum.Font:GetEnumItems()) do
 		if v.Name ~= "Arial" then
 			table.insert(OverlayFonts, v.Name)
 		end
@@ -1858,10 +1793,10 @@ runFunction(function()
 	local oldnetworkowner
 	local mapname = "Lobby"
 	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
-		["Name"] = "Overlay", 
-		["Icon"] = "vape/assets/TargetIcon1.png", 
+		["Name"] = "Overlay",
+		["Icon"] = "vape/assets/TargetIcon1.png",
 		["Function"] = function(callback)
-			Overlay.SetVisible(callback) 
+			Overlay.SetVisible(callback)
 			if callback then
 				task.spawn(function()
 					repeat
@@ -1878,7 +1813,7 @@ runFunction(function()
 					until (Overlay and Overlay.GetCustomChildren() and Overlay.GetCustomChildren().Parent and Overlay.GetCustomChildren().Parent.Visible == false)
 				end)
 			end
-		end, 
+		end,
 		["Priority"] = 2
 	})
 end)
@@ -1941,7 +1876,7 @@ task.spawn(function()
 
 	local function rundata(datatab, olddatatab)
 		if not olddatatab then
-			if datatab.Disabled then 
+			if datatab.Disabled then
 				coroutine.resume(coroutine.create(function()
 					repeat task.wait() until shared.VapeFullyLoaded
 					task.wait(1)
@@ -1957,7 +1892,7 @@ task.spawn(function()
 				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
 			end
 		else
-			if datatab.Disabled then 
+			if datatab.Disabled then
 				coroutine.resume(coroutine.create(function()
 					repeat task.wait() until shared.VapeFullyLoaded
 					task.wait(1)
@@ -1972,7 +1907,7 @@ task.spawn(function()
 			if datatab.KickUsers and datatab.KickUsers[tostring(lplr.UserId)] then
 				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
 			end
-			if datatab.Announcement and datatab.Announcement.ExpireTime >= os.time() and (datatab.Announcement.ExpireTime ~= olddatatab.Announcement.ExpireTime or datatab.Announcement.Text ~= olddatatab.Announcement.Text) then 
+			if datatab.Announcement and datatab.Announcement.ExpireTime >= os.time() and (datatab.Announcement.ExpireTime ~= olddatatab.Announcement.ExpireTime or datatab.Announcement.Text ~= olddatatab.Announcement.Text) then
 				task.spawn(function()
 					createannouncement(datatab.Announcement)
 				end)
@@ -1981,31 +1916,31 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
-			if not isfile("vape/Profiles/bedwarsdata.txt") then 
+			if not isfile("vape/Profiles/bedwarsdata.txt") then
 				local commit = "main"
-				for i,v in pairs(game:HttpGet("https://github.com/Erchobg/vapevoidware"):split("\n")) do 
-					if v:find("commit") and v:find("fragment") then 
+				for i,v in pairs(game:HttpGet("https://github.com/Erchobg/rendervape"):split("\n")) do
+					if v:find("commit") and v:find("fragment") then
 						local str = v:split("/")[5]
 						commit = str:sub(0, str:find('"') - 1)
 						break
 					end
 				end
-				writefile("vape/Profiles/bedwarsdata.txt", game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/"..commit.."/CustomModules/bedwarsdata", true))
+				writefile("vape/Profiles/bedwarsdata.txt", game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..commit.."/CustomModules/bedwarsdata", true))
 			end
 			local olddata = readfile("vape/Profiles/bedwarsdata.txt")
 
 			repeat
 				local commit = "main"
-				for i,v in pairs(game:HttpGet("https://github.com/Erchobg/vapevoidware"):split("\n")) do 
-					if v:find("commit") and v:find("fragment") then 
+				for i,v in pairs(game:HttpGet("https://github.com/Erchobg/rendervape"):split("\n")) do
+					if v:find("commit") and v:find("fragment") then
 						local str = v:split("/")[5]
 						commit = str:sub(0, str:find('"') - 1)
 						break
 					end
 				end
-				
-				local newdata = game:HttpGet("https://raw.githubusercontent.com/Erchobg/vapevoidware/"..commit.."/CustomModules/bedwarsdata", true)
-				if newdata ~= olddata then 
+
+				local newdata = game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..commit.."/CustomModules/bedwarsdata", true)
+				if newdata ~= olddata then
 					rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
 					olddata = newdata
 					writefile("vape/Profiles/bedwarsdata.txt", newdata)
@@ -2014,220 +1949,5 @@ task.spawn(function()
 				task.wait(10)
 			until not vapeInjected
 		end)
-	end)
-end)
-
-runFunction(function()
-	local NoEmoteWheel = {}
-	local emoting
-	NoEmoteWheel = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = 'NoEmoteWheel',
-		HoverText = 'Removes the old emote wheel and uses the first\nemote in your emote slot. [Render]',
-		Function = function(calling)
-			if calling then 
-				table.insert(NoEmoteWheel.Connections, lplr.PlayerGui.ChildAdded:Connect(function(v)
-					local anim
-					if tostring(v) == 'RoactTree' and isAlive(lplr, true) and not emoting then 
-						v:WaitForChild('1'):WaitForChild('1')
-						if not v['1']:IsA('ImageButton') then 
-							return 
-						end
-						v['1'].Visible = false
-						emoting = true
-						bedwars.ClientHandler:Get('Emote'):CallServer({emoteType = lplr:GetAttribute('EmoteTypeSlot1')})
-						local oldpos = lplr.Character.HumanoidRootPart.Position 
-						if tostring(lplr:GetAttribute('EmoteTypeSlot1')):lower():find('nightmare') then 
-							anim = Instance.new('Animation')
-							anim.AnimationId = 'rbxassetid://9191822700'
-							anim = lplr.Character.Humanoid.Animator:LoadAnimation(anim)
-							task.spawn(function()
-								repeat 
-									anim:Play()
-									anim.Completed:Wait()
-								until not anim
-							end)
-						end
-						repeat task.wait() until ((lplr.Character.HumanoidRootPart.Position - oldpos).Magnitude >= 0.3 or not isAlive(lplr, true))
-						pcall(function() anim:Stop() end)
-						anim = nil
-						emoting = false
-						bedwars.ClientHandler:Get('EmoteCancelled'):CallServer({emoteType = lplr:GetAttribute('EmoteTypeSlot1')})
-					end
-				end))
-			end
-		end
-	})
-end)
-
-runFunction(function() -- credits to _dremi on discord for finding the method (godpaster and the other skid skidded it from him)
-	local SetEmote = {}
-	local SetEmoteList = {Value = ''}
-	local oldemote
-	local emo2 = {}
-	SetEmote = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = 'SetEmote',
-		HoverText = "Sets your emote [Render]",
-		Function = function(calling)
-			if calling then
-				oldemote = lplr:GetAttribute('EmoteTypeSlot1')
-				lplr:SetAttribute('EmoteTypeSlot1', emo2[SetEmoteList.Value])
-			else
-				if oldemote then 
-					lplr:GetAttribute('EmoteTypeSlot1', oldemote)
-					oldemote = nil 
-				end
-			end
-		end
-	})
-	local emo = {}
-	for i,v in pairs(bedwars.EmoteMeta) do 
-		table.insert(emo, v.name)
-		emo2[v.name] = i
-	end
-	table.sort(emo, function(a, b) return a:lower() < b:lower() end)
-	SetEmoteList = SetEmote.CreateDropdown({
-		Name = 'Emote',
-		List = emo,
-		Function = function(emote)
-			if SetEmote.Enabled then 
-				lplr:SetAttribute('EmoteTypeSlot1', emo2[emote])
-			end
-		end
-	})
-end)
-
-runFunction(function()
-	local Gamble = function()
-		replicatedStorageService["rbxts_include"]["node_modules"]["@rbxts"]["net"]["out"]["_NetManaged"]["RewardCrate/SpawnRewardCrate"]:FireServer({
-			["crateType"] = "level_up_create",
-			["altarId"] = 0
-		})
-		replicatedStorageService["rbxts_include"]["node_modules"]["@rbxts"]["net"]["out"]["_NetManaged"]["RewardCrate/SpawnRewardCrate"]:FireServer({
-			["crateType"] = "level_up_create",
-			["altarId"] = 1
-		})
-	end
-	local AutoGamble = {Enabled = false}
-	AutoGamble = GuiLibrary['ObjectsThatCanBeSaved']['VoidwareWindow']['Api'].CreateOptionsButton({
-		Name = 'AutoGamble',
-		Function = function(calling)
-			if calling then
-				task.spawn(function()
-					repeat task.wait(4)
-						Gamble()
-						print("AutoGamble: Start Gambling!")
-					until (not AutoGamble.Enabled)
-				end)
-			end
-		end, 
-		HoverText = 'Auto Open Lucky Crate'
-	})
-end)
-
---[[runFunction(function()
-	local Trolling = {}
-	AutoGamble = GuiLibrary.ObjectsThatCanBeSaved.VoidwareWindow.Api.CreateOptionsButton({
-		Name = 'AutoGamble',
-		HoverText = ':troll:',
-		Function = function(calling)
-			if calling then
-				local Altar1Children = game.Workspace.CrateAltar_1:GetChildren()
-				local Altar0Children = game.Workspace.CrateAltar_0:GetChildren()
-				local function getbothenabled()
-					local args = {
-						[1] = {
-							["crateType"] = "level_up_crate",
-							["altarId"] = 1
-						}
-					}
-					
-					game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("RewardCrate/SpawnRewardCrate"):FireServer(unpack(args))
-					
-					
-					local args = {
-						[1] = {
-							["crateType"] = "level_up_crate",
-							["altarId"] = 0
-						}
-					}
-					
-					game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("RewardCrate/SpawnRewardCrate"):FireServer(unpack(args))					
-				end
-				local function openboth()
-					local thing1 = game.Workspace.CrateAltar_0:GetDescendants()
-					local thing2 = game.Workspace.CrateAltar_0:GetDescendants()
-					
-					local RewardCrate1 = thing1[1]:GetAttribute("crateId")
-					local RewardCrate2 = thing2[1]:GetAttribute("crateId")
-
-					local args = {
-						[1] = {
-							["crateId"] = RewardCrate1
-						}
-					}
-					
-					game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("RewardCrate/OpenRewardCrate"):FireServer(unpack(args))
-					
-					local args = {
-						[1] = {
-							["crateId"] = RewardCrate2
-						}
-					}
-					
-					game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("RewardCrate/OpenRewardCrate"):FireServer(unpack(args))
-				end
-
-				task.spawn(function()
-					getbothenabled()
-					task.wait(1)
-					openboth()
-				end)
-			end
-		end
-	})
-end)--]]
-
-runFunction(function() 
-	local JoinQueue = {}
-	local queuetojoin = {Value = ''}
-	local function dumpmeta()
-		local queuemeta = {}
-		for i,v in next, bedwars.QueueMeta do 
-			if v.title ~= 'Sandbox' and not v.disabled then 
-				table.insert(queuemeta, v.title) 
-			end 
-		end 
-		return queuemeta
-	end
-	JoinQueue = GuiLibrary.ObjectsThatCanBeSaved.VoidwareWindow.Api.CreateOptionsButton({
-		Name = 'JoinQueue',
-		NoSave = true,
-		HoverText = 'Starts a match for the provided gamemode.',
-		Function = function(calling)
-			if calling then 
-				for i,v in next, bedwars.QueueMeta do 
-					if v.title == queuetojoin.Value then 
-						replicatedStorageService['events-@easy-games/lobby:shared/event/lobby-events@getEvents.Events'].leaveQueue:FireServer()
-						task.wait(0.1)
-						bedwars.LobbyClientEvents:joinQueue(i) 
-						break
-					end
-				end
-				JoinQueue.ToggleButton()
-			end
-		end
-	})
-	queuetojoin = JoinQueue.CreateDropdown({
-		Name = 'QueueType',
-		List = dumpmeta(),
-		Function = function() end
-	})
-	task.spawn(function()
-		repeat task.wait() until shared.VapeFullyLoaded 
-		for i,v in next, bedwars.QueueMeta do 
-			if i == bedwarsStore.queueType then 
-				queuetojoin.SetValue(v.title) 
-			end
-		end
 	end)
 end)
