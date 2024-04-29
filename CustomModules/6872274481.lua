@@ -9402,7 +9402,7 @@ run(function()
 					end
 					if AntiVoidPart then
 						AntiVoidPart.Position = Vector3.new(0, antivoidypos, 0)
-						AntiVoidPart.Parent = workspace
+						--AntiVoidPart.Parent = workspace
 					end
 				end)
 			end
