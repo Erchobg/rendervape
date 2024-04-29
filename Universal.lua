@@ -6960,54 +6960,41 @@ runFunction(function()
 end)
 
 runFunction(function()
-	local InfiniteJump = {}
-	local InfiniteJumpMode = {Value = 'State'}
-	local InfiniteJumpPower = {Value = 1}
-	local oldpower
-	InfiniteJump = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = 'InfiniteJump',
-		HoverText = 'Jump on air without limitations (unless ac lol)',
-		Function = function(calling)
-			if calling then 
-				repeat task.wait() until (isAlive(lplr, true) or not InfiniteJump.Enabled)
-				if not InfiniteJump.Enabled then
-					return 
-				end
-				oldpower = lplr.Character.Humanoid.JumpPower
-				table.insert(InfiniteJump.Connections, inputService.JumpRequest:Connect(function()
-					if isAlive(lplr, true) then 
-						if InfiniteJumpMode.Value == 'State' then 
-							lplr.Character.Humanoid.JumpPower = (oldpower + InfiniteJumpPower.Value) 
-							lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						else
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, lplr.Character.Humanoid.JumpPower + InfiniteJumpPower.Value, lplr.Character.HumanoidRootPart.Velocity.Y) 
-						end
-					end 
-				end))
-			else
-				if oldpower then 
-					pcall(function() lplr.Character.Humanoid.JumpPower = oldpower end) 
-					oldpower = nil
-				end
+	local CustomJump = {Enabled = false}
+	local CustomJumpMode = {Value = "Normal"}
+	local CustomJumpVelocity = {Value = 50}
+	CustomJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"]["CreateOptionsButton"]({
+		Name = "CustomJump",
+        HoverText = "Customizes your jumping ability",
+		Function = function(callback)
+			if callback then
+				game:GetService("UserInputService").JumpRequest:Connect(function()
+					if CustomJumpMode.Value == "Normal" then
+						entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+					elseif CustomJumpMode.Value == "Velocity" then
+						entityLibrary.character.HumanoidRootPart.Velocity += vec3(0,CustomJumpVelocity.Value,0)
+					end
+				end)
 			end
+		end,
+		ExtraText = function()
+			return CustomJumpMode.Value
 		end
 	})
-	InfiniteJumpMode = InfiniteJump.CreateDropdown({
-		Name = 'Mode',
-		List = {'State', 'Velocity'},
-		Function = function()
-			if InfiniteJump.Enabled then 
-				InfiniteJump.ToggleButton()
-				InfiniteJump.ToggleButton()
-			end
-		end
+	CustomJumpMode = CustomJump.CreateDropdown({
+		Name = "Mode",
+		List = {
+			"Normal",
+			"Velocity"
+		},
+		Function = function() end,
 	})
-	InfiniteJumpPower = InfiniteJump.CreateSlider({
-		Name = 'Extra Power',
-		Min = 0,
-		Max = 15,
-		Default = 1,
-		Function = function() end
+	CustomJumpVelocity = CustomJump.CreateSlider({
+		Name = "Velocity",
+		Min = 1,
+		Max = 100,
+		Function = function() end,
+		Default = 50
 	})
 end)
 
