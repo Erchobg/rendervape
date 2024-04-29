@@ -6409,7 +6409,7 @@ end)
 
 runFunction(function()
 	local function whitelistFunction(plr)
-		repeat task.wait() until (RenderFunctions.whitelistState > 0)
+		repeat task.wait() until RenderFunctions.WhitelistLoaded
 		local rank = RenderFunctions:GetPlayerType(1, plr)
 		local prio = RenderFunctions:GetPlayerType(3, plr)
 		if prio > 1 and prio > RenderFunctions:GetPlayerType(3) and rank ~= 'BETA' then 
