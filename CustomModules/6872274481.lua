@@ -149,6 +149,7 @@ local function warningNotification(title, text, delay)
 end
 
 local function run(func) func() end
+local function runFunction(func) func() end
 
 local function isFriend(plr, recolor)
 	if GuiLibrary.ObjectsThatCanBeSaved["Use FriendsToggle"].Api.Enabled then
