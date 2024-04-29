@@ -7488,7 +7488,7 @@ runFunction(function()
 	})
 end)
 
-local httprequest = (http and http.request or http_request or fluxus and fluxus.request or request or function() end)
+--[[local httprequest = (http and http.request or http_request or fluxus and fluxus.request or request or function() end)
 runFunction(function()
 	local Translation = {}
 	local language = {Value = 'chinese'} 
@@ -7571,7 +7571,7 @@ runFunction(function()
 			end)
 		end,
 	})
-end)
+end)--]]
 
 runFunction(function()
 	local BubbleMods = {}
