@@ -6217,8 +6217,12 @@ run(function()
 end)
 
 ----[RENDER]-----
+---------[CORE SERVICES] -----
 local proximityService = game:GetService('ProximityPromptService')
+local teleportService = game:GetService('TeleportService')
+local httpService = game:GetService("HttpService")
 local replicatedStorageService = replicatedStorage
+------------------------------
 local RenderFunctions = {}
 local RenderStore = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), tweens = {}, ping = 0, platform = inputService:GetPlatform(), LocalPosition = Vector3.zero, groundTime = tick(), UpdateGroundTick = function() end, sessionInfo = {labelInstances = {}}, clonedata = {}}
 getgenv().RenderStore = RenderStore
@@ -6231,6 +6235,7 @@ local RenderFunctions = loadstring(vapeGithubRequest("Libraries/renderfunctions.
 local function run(func) func() end
 local function runFunction(func) func() end
 local function runLunar(func) func() end
+----[CORE FUNCTIONS]------
 local newcolor = function() return {Hue = 0, Sat = 0, Value = 0} end
 local GetEnumItems = function() return {} end
 GetEnumItems = function(enum)
@@ -6302,6 +6307,59 @@ sendmessage = function(text)
 		replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(text, 'All')
 	end
 end
+local getnewserver = function() return end
+getnewserver = function(customgame, popular, performance)
+	local players, server = 0, nil
+	local success, serverTable = pcall(function() return httpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/'..(customgame or game.PlaceId)..'/servers/Public?sortOrder=Asc&limit=100', true)) end)
+	if success and type(serverTable) == 'table' and type(serverTable.data) == 'table' then 
+		for i,v in serverTable.data do 
+			if v.id and v.playing and v.maxPlayers and tonumber(v.maxPlayers) > tonumber(v.playing) and tonumber(v.playing) > 0 then 
+				if v.id == tostring(game.JobId) then 
+					continue 
+				end
+				if tonumber(v.playing) < players and popular then 
+					continue
+				end
+				if performance and v.ping and tonumber(v.ping) > 170 then
+					continue
+				end
+				players = tonumber(v.playing)
+				server = v.id
+			end
+		end
+	end
+	return server
+end
+local switchserver = function() end
+switchserver = function(onfound)
+	local server 
+	onfound = onfound or function() end
+	repeat server = getnewserver() task.wait() until server
+	task.spawn(onfound, server)
+	game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, server, lplr)
+end
+local networkownerswitch = tick()
+local isnetworkowner = function(part)
+	local suc, res = pcall(function() return gethiddenproperty(part, "NetworkOwnershipRule") end)
+	if suc and res == Enum.NetworkOwnership.Manual then
+		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
+		networkownerswitch = tick() + 8
+	end
+	return networkownerswitch <= tick()
+end
+local characterDescendant = function() return end
+characterDescendant = function(object)
+	for i,v in playersService:GetPlayers() do 
+		if v.Character and object:IsDescendantOf(v.Character) then 
+			return v 
+		end
+	end
+end
+--[----------------------------------]--
+--[----------------------------------]--
+--[----------------------------------]--
+--[----------------------------------]--
+--[----------------------------------]--
 getgenv().ria = (isfile('ria.json') and readfile('ria.json') or nil)
 task.spawn(function()
 	local function chatfunc(plr)
@@ -6510,6 +6568,1380 @@ task.spawn(function()
 end)
 
 ----[MODULES]-----
+runFunction(function()
+	local HudAnimation = {Enabled = false}
+	local ModrenGui = Instance.new("ScreenGui")
+	local TargetInfo = Instance.new("Frame")
+	local UICorner = Instance.new("UICorner")
+	local TargetProfile = Instance.new("ImageLabel")
+	local UICorner_2 = Instance.new("UICorner")
+	local DisplayName = Instance.new("TextLabel")
+	local TargetName = Instance.new("TextLabel")
+	local TargetHealthBar = Instance.new("Frame")
+	local UICorner_3 = Instance.new("UICorner")
+	local FullHealthBar = Instance.new("Frame")
+	local FullHealthBarCorners = Instance.new("UICorner")
+	local HP = Instance.new("TextLabel")
+	local TargetHP = Instance.new("TextLabel")
+
+	ModrenGui.Name = "ModrenGui"
+	ModrenGui.Parent = lplr.PlayerGui
+	ModrenGui.ResetOnSpawn = false
+
+	TargetInfo.Name = "TargetInfo"
+	TargetInfo.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+	TargetInfo.BackgroundTransparency = 0.180
+	TargetInfo.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	TargetInfo.BorderSizePixel = 0
+	TargetInfo.Size = UDim2.new(0, 336, 0, 108)
+
+	UICorner.CornerRadius = UDim.new(0, 20)
+	UICorner.Parent = TargetInfo
+
+	TargetProfile.Name = "TargetProfile"
+	TargetProfile.Parent = TargetInfo
+	TargetProfile.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	TargetProfile.BackgroundTransparency = 0.800
+	TargetProfile.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	TargetProfile.BorderSizePixel = 0
+	TargetProfile.Position = UDim2.new(0.0457316823, 0, 0.171846747, 0)
+	TargetProfile.Size = UDim2.new(0, 70, 0, 70)
+	TargetProfile.Image = "rbxassetid://16504243510"
+
+	UICorner_2.CornerRadius = UDim.new(0, 13)
+	UICorner_2.Parent = TargetProfile
+
+	DisplayName.Name = "DisplayName"
+	DisplayName.Parent = TargetInfo
+	DisplayName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	DisplayName.BackgroundTransparency = 1.000
+	DisplayName.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	DisplayName.BorderSizePixel = 0
+	DisplayName.Position = UDim2.new(0.283972234, 0, 0.22989513, 0)
+	DisplayName.Size = UDim2.new(0, 206, 0, 20)
+	DisplayName.Font = Enum.Font.Unknown
+	DisplayName.Text = "Username:"
+	DisplayName.TextColor3 = Color3.fromRGB(255, 255, 255)
+	DisplayName.TextScaled = true
+	DisplayName.TextSize = 14.000
+	DisplayName.TextWrapped = true
+	DisplayName.TextXAlignment = Enum.TextXAlignment.Left
+
+	TargetName.Name = "TargetName"
+	TargetName.Parent = TargetInfo
+	TargetName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	TargetName.BackgroundTransparency = 1.000
+	TargetName.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	TargetName.BorderSizePixel = 0
+	TargetName.Position = UDim2.new(0.579703927, 0, 0.229895085, 0)
+	TargetName.Size = UDim2.new(0, 133, 0, 20)
+	TargetName.Font = Enum.Font.Unknown
+	TargetName.Text = lplr.DisplayName
+	TargetName.TextColor3 = Color3.fromRGB(170, 0, 255)
+	TargetName.TextScaled = true
+	TargetName.TextSize = 14.000
+	TargetName.TextWrapped = true
+	TargetName.TextXAlignment = Enum.TextXAlignment.Left
+
+	TargetHealthBar.Name = "TargetHealthBar"
+	TargetHealthBar.Parent = TargetInfo
+	TargetHealthBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+	TargetHealthBar.BackgroundTransparency = 0.100
+	TargetHealthBar.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	TargetHealthBar.BorderSizePixel = 0
+	TargetHealthBar.Position = UDim2.new(0.28273809, 0, 0.471865892, 0)
+	TargetHealthBar.Size = UDim2.new(0, 216, 0, 12)
+
+	UICorner_3.CornerRadius = UDim.new(0, 10)
+	UICorner_3.Parent = TargetHealthBar
+
+	FullHealthBar.Name = "FullHealthBar"
+	FullHealthBar.Parent = TargetHealthBar
+	FullHealthBar.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
+	FullHealthBar.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	FullHealthBar.BorderSizePixel = 0
+	FullHealthBar.Position = UDim2.new(-0.00462934701, 0, -0.00961558055, 0)
+	FullHealthBar.Size = UDim2.new(0, 216, 0, 12)
+
+	FullHealthBarCorners.CornerRadius = UDim.new(0, 10)
+	FullHealthBarCorners.Name = "FullHealthBarCorner"
+	FullHealthBarCorners.Parent = FullHealthBar
+
+	HP.Name = "HP"
+	HP.Parent = TargetInfo
+	HP.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	HP.BackgroundTransparency = 1.000
+	HP.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	HP.BorderSizePixel = 0
+	HP.Position = UDim2.new(0.28273809, 0, 0.638888896, 0)
+	HP.Size = UDim2.new(0, 73, 0, 19)
+	HP.Font = Enum.Font.Unknown
+	HP.Text = "HP:"
+	HP.TextColor3 = Color3.fromRGB(255, 255, 255)
+	HP.TextScaled = true
+	HP.TextSize = 14.000
+	HP.TextWrapped = true
+	HP.TextXAlignment = Enum.TextXAlignment.Left
+	HP.TextYAlignment = Enum.TextYAlignment.Top
+
+	TargetHP.Name = "TargetHP"
+	TargetHP.Parent = TargetInfo
+	TargetHP.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	TargetHP.BackgroundTransparency = 1.000
+	TargetHP.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	TargetHP.BorderSizePixel = 0
+	TargetHP.Position = UDim2.new(0.389880955, 0, 0.638888896, 0)
+	TargetHP.Size = UDim2.new(0, 73, 0, 19)
+	TargetHP.Font = Enum.Font.Unknown
+	TargetHP.Text = "100"
+	TargetHP.TextColor3 = Color3.fromRGB(170, 0, 255)
+	TargetHP.TextScaled = true
+	TargetHP.TextSize = 14.000
+	TargetHP.TextWrapped = true
+	TargetHP.TextXAlignment = Enum.TextXAlignment.Left
+	TargetHP.TextYAlignment = Enum.TextYAlignment.Top
+
+	local NewTargetHud
+	local NewRenderHud 
+	local HudCorner
+	local PlayerProfile
+	local UICorner
+	local Names
+	local DisPlayName
+	local HealthBar 
+	local HealthBarCorner 
+	local HealthBarFull 
+	local FullHealthBarCorner 
+	local UIGradient
+	local PlayerHealth
+	local HudGradient
+	local HudAspectRatio
+	local HudStroke
+	local HealthStroke
+	local UIGradient2
+	local NewRender = {}
+	NewTargetHud = Instance.new("ScreenGui")
+    NewRenderHud = Instance.new("Frame")
+    HudCorner = Instance.new("UICorner")
+    PlayerProfile = Instance.new("ImageLabel")
+    UICorner = Instance.new("UICorner")
+    Names = Instance.new("TextLabel")
+    DisPlayName = Instance.new("TextLabel")
+    HealthBar = Instance.new("Frame")
+    HealthBarCorner = Instance.new("UICorner")
+    HealthBarFull = Instance.new("Frame")
+    FullHealthBarCorner = Instance.new("UICorner")
+    UIGradient = Instance.new("UIGradient")
+    PlayerHealth = Instance.new("TextLabel")
+    HudGradient = Instance.new("UIGradient")
+    HudAspectRatio = Instance.new("UIAspectRatioConstraint")
+    HudStroke = Instance.new("UIStroke")
+    HealthStroke = Instance.new("UIStroke")
+    UIGradient2 = Instance.new("UIGradient")
+
+    NewTargetHud.Name = "NewTargetHud"
+    NewTargetHud.Parent = lplr.PlayerGui
+    NewTargetHud.ResetOnSpawn = false
+    
+    NewRenderHud.Name = "NewRenderHud"
+    NewRenderHud.Active = true
+    NewRenderHud.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NewRenderHud.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    NewRenderHud.BorderSizePixel = 0
+    NewRenderHud.Size = UDim2.new(0, 281, 0, 88)
+
+    HudCorner.CornerRadius = UDim.new(0, 20)
+    HudCorner.Name = "HudCorner"
+    HudCorner.Parent = NewRenderHud
+    
+    PlayerProfile.Name = "PlayerProfile"
+    PlayerProfile.Parent = NewRenderHud
+    PlayerProfile.BackgroundColor3 = Color3.fromRGB(19, 22, 29)
+    PlayerProfile.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    PlayerProfile.BorderSizePixel = 0
+    PlayerProfile.Position = UDim2.new(0.0387954451, 0, 0.163921848, 0)
+    PlayerProfile.Size = UDim2.new(0, 60, 0, 60)
+    PlayerProfile.Image = "rbxassetid://16504243510"
+    
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = PlayerProfile
+    
+    Names.Name = "Name"
+    Names.Parent = NewRenderHud
+    Names.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Names.BackgroundTransparency = 1.000
+    Names.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Names.Position = UDim2.new(0.293499917, 0, 0.161067262, 0)
+    Names.Size = UDim2.new(0, 50, 0, 18)
+    Names.Font = Enum.Font.Gotham
+    Names.Text = "Name:"
+    Names.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Names.TextScaled = true
+    Names.TextSize = 14.000
+    Names.TextWrapped = true
+    Names.TextXAlignment = Enum.TextXAlignment.Left
+    Names.TextYAlignment = Enum.TextYAlignment.Top
+    
+    DisPlayName.Name = "DisPlayName"
+    DisPlayName.Parent = Names
+    DisPlayName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    DisPlayName.BackgroundTransparency = 1.000
+    DisPlayName.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    DisPlayName.Position = UDim2.new(1.17893863, 0, -0.00483025424, 0)
+    DisPlayName.Size = UDim2.new(0, 127, 0, 17)
+    DisPlayName.Font = Enum.Font.Gotham
+    DisPlayName.Text = ""
+    DisPlayName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DisPlayName.TextScaled = true
+    DisPlayName.TextSize = 14.000
+    DisPlayName.TextWrapped = true
+    DisPlayName.TextXAlignment = Enum.TextXAlignment.Left
+    DisPlayName.TextYAlignment = Enum.TextYAlignment.Top
+    
+    HealthBar.Name = "HealthBar"
+    HealthBar.Parent = NewRenderHud
+    HealthBar.BackgroundColor3 = Color3.fromRGB(22, 27, 35)
+    HealthBar.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    HealthBar.BorderSizePixel = 0
+    HealthBar.Position = UDim2.new(0.293607324, 0, 0.684782565, 0)
+    HealthBar.Size = UDim2.new(0, 132, 0, 15)
+    
+    HealthBarCorner.CornerRadius = UDim.new(0, 7)
+    HealthBarCorner.Name = "HealthBarCorner"
+    HealthBarCorner.Parent = HealthBar
+    
+    HealthBarFull.Name = "HealthBarFull"
+    HealthBarFull.Parent = HealthBar
+    HealthBarFull.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    HealthBarFull.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    HealthBarFull.BorderSizePixel = 0
+    HealthBarFull.Position = UDim2.new(0.00336657069, 0, -0.0295039583, 0)
+    HealthBarFull.Size = UDim2.new(0, 132, 0, 15)
+    
+    FullHealthBarCorner.CornerRadius = UDim.new(0, 7)
+    FullHealthBarCorner.Name = "FullHealthBarCorner"
+    FullHealthBarCorner.Parent = HealthBarFull
+    
+    UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(116, 24, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(176, 19, 255))}
+    UIGradient.Rotation = 90
+    UIGradient.Parent = HealthBarFull
+    
+    PlayerHealth.Name = "PlayerHealth"
+    PlayerHealth.Parent = HealthBar
+    PlayerHealth.BackgroundColor3 = Color3.fromRGB(115, 0, 255)
+    PlayerHealth.BackgroundTransparency = 1.000
+    PlayerHealth.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    PlayerHealth.BorderSizePixel = 0
+    PlayerHealth.Position = UDim2.new(1.08270681, 0, -0.0714285746, 0)
+    PlayerHealth.Size = UDim2.new(0, 41, 0, 14)
+    PlayerHealth.Font = Enum.Font.GothamMedium
+    PlayerHealth.Text = "50.0%"
+    PlayerHealth.TextColor3 = Color3.fromRGB(255, 255, 255)
+    PlayerHealth.TextScaled = true
+    PlayerHealth.TextSize = 14.000
+    PlayerHealth.TextWrapped = true
+    
+    HudGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(25, 28, 38)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(31, 32, 50))}
+    HudGradient.Rotation = 30
+    HudGradient.Name = "HudGradient"
+    HudGradient.Parent = NewRenderHud
+    
+    HudAspectRatio.Name = "HudAspectRatio"
+    HudAspectRatio.Parent = NewRenderHud
+    HudAspectRatio.AspectRatio = 3.193
+    
+    HudStroke.Color = Color3.fromRGB(255, 255, 255)
+    HudStroke.Thickness = 4
+    HudStroke.Name = "HudStroke"
+    HudStroke.Parent = NewRenderHud
+    
+    HealthStroke.Thickness = 0.699999988079071
+    HealthStroke.Name = "HealthStroke"
+    HealthStroke.Parent = PlayerHealth    
+
+    UIGradient2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(119, 0, 255)), ColorSequenceKeypoint.new(0.39, Color3.fromRGB(129, 1, 234)), ColorSequenceKeypoint.new(0.54, Color3.fromRGB(111, 1, 214)), ColorSequenceKeypoint.new(0.78, Color3.fromRGB(89, 0, 191)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(2, 6, 255))}
+    UIGradient2.Parent = HudStroke
+
+	local targetui = Instance.new('Frame') 
+	local targetactive = false
+	targetui.AnchorPoint = Vector2.new(-0.5, 0)
+	targetui.Size = UDim2.new(0, 320, 0, 109)
+	targetui.BackgroundColor3 = Color3.fromRGB(60, 12, 127)
+	targetui.BackgroundTransparency = 0.25
+	targetui.Visible = false
+	local targetinforounding = Instance.new('UICorner')
+	targetinforounding.Parent = targetui
+	local targetinfostroke = Instance.new('UIStroke')
+	targetinfostroke.Color = Color3.fromRGB(255, 255, 255)
+	targetinfostroke.Thickness = 3
+	targetinfostroke.Parent = targetui
+	local targetstrokeround = Instance.new('UIGradient')
+	targetstrokeround.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(168, 92, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(146, 23, 254))})
+	targetstrokeround.Parent = targetinfostroke
+	local targethealthbarBK = Instance.new('Frame')
+	targethealthbarBK.Size = UDim2.new(0, 171, 0, 18)
+	targethealthbarBK.Position = UDim2.new(0.35, 0, 0.477, 0)
+	targethealthbarBK.BackgroundColor3 = Color3.fromRGB(45, 7, 91)
+	targethealthbarBK.Parent = targetui 
+	local healthbarBKRound = Instance.new('UICorner')
+	healthbarBKRound.CornerRadius = UDim.new(1, 8)
+	healthbarBKRound.Parent = targethealthbarBK 
+	local targethealthbar = targethealthbarBK:Clone() 
+	targethealthbar.ZIndex = 2 
+	targethealthbar.BackgroundColor3 = Color3.fromRGB(130, 21, 255) 
+	targethealthbar.Parent = targetui
+	local targeticon = Instance.new('ImageLabel')
+	targeticon.Image = 'rbxthumb://type=AvatarHeadShot&id='..(lplr.UserId)..'&w=420&h=420'
+	targeticon.BackgroundTransparency = 1 
+	targeticon.Size = UDim2.new(0, 84, 0, 82)
+	targeticon.Position = UDim2.new(0.035, 0, 0.123, 0)
+	targeticon.Parent = targetui
+	local targeticonround = Instance.new('UICorner')
+	targeticonround.Parent = targeticon
+	local tagretinfohealth = Instance.new('TextLabel')
+	tagretinfohealth.Text = (math.round(isAlive(lplr, true) and lplr.Character.Humanoid.Health or 100)..' HP')
+	tagretinfohealth.TextSize = 15
+	tagretinfohealth.BackgroundTransparency = 1 
+	tagretinfohealth.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Bold)
+	tagretinfohealth.Position = UDim2.new(0.291, 0, 0.532, 0)
+	tagretinfohealth.Size = UDim2.new(0, 208, 0, 64)
+	tagretinfohealth.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tagretinfohealth.Parent = targetui
+	local targetname = tagretinfohealth:Clone() -- lazy ok 
+	targetname.Text = lplr.DisplayName 
+	targetname.Position = UDim2.new(0.291, 0, 0, 0)
+	targetname.Size = UDim2.new(0, 208, 0, 64)
+	targetname.TextSize = 18
+	targetname.Parent = targetui	
+	local targetinfomainframe = Instance.new('Frame') -- pasted from my old project Voidware
+    local targetinfomaingradient = Instance.new('UIGradient')
+    local targetinfomainrounding = Instance.new('UICorner')
+	local targetinfopfpbox = Instance.new('Frame')
+    local targetinfopfpboxrounding = Instance.new('UICorner')
+	local targetinfoname = Instance.new('TextLabel')
+	local targetinfohealthinfo = Instance.new('TextLabel')
+	local targetinfonamefont = Font.new('rbxasset://fonts/families/GothamSSm.json')
+	local targetinfohealthbarbackground = Instance.new('Frame')
+	local targetinfohealthbarbkround = Instance.new('UICorner')
+	local targetinfohealthbar = Instance.new('Frame')
+	local targetinfoprofilepicture = Instance.new('ImageLabel')  
+	local targetinfoprofilepictureround = Instance.new('UICorner')
+	targetinfonamefont.Weight = Enum.FontWeight.Heavy
+	targetinfomainframe.Name = 'VoidwareTargetInfo'
+	targetinfomainframe.Size = UDim2.new(0, 350, 0, 96)
+	targetinfomainframe.BackgroundTransparency = 0.13
+	targetinfomaingradient.Parent = targetinfomainframe
+	targetinfomaingradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(69, 13, 136)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))})
+	targetinfomainrounding.Parent = targetinfomainframe
+	targetinfomainrounding.CornerRadius = UDim.new(0, 8)
+	targetinfopfpbox.Parent = targetinfomainframe
+	targetinfopfpbox.Name = 'ProfilePictureBox'
+	targetinfopfpbox.BackgroundColor3 = Color3.fromRGB(130, 0, 166)
+	targetinfopfpbox.Position = UDim2.new(0.035, 0, 0.165, 0)
+	targetinfopfpbox.Size = UDim2.new(0, 70, 0, 69)
+	targetinfopfpboxrounding.Parent = targetinfopfpbox
+	targetinfomainrounding.CornerRadius = UDim.new(0, 8)
+	targetinfoname.Parent = targetinfomainframe
+	targetinfoname.Name = 'TargetNameInfo'
+	targetinfoname.Text = lplr.DisplayName
+	targetinfoname.TextXAlignment = Enum.TextXAlignment.Left
+	targetinfoname.RichText = true
+	targetinfoname.Size = UDim2.new(0, 215, 0, 31)
+	targetinfoname.Position = UDim2.new(0.289, 0, 0.058, 0)
+	targetinfoname.FontFace = targetinfonamefont
+	targetinfoname.BackgroundTransparency = 1
+	targetinfoname.TextSize = 20
+	targetinfoname.TextColor3 = Color3.fromRGB(255, 255, 255)
+	targetinfohealthinfo.Parent = targetinfomainframe
+	targetinfohealthinfo.Text = ''
+	targetinfohealthinfo.Name = 'TargetHealthInfo'
+	targetinfohealthinfo.Size = UDim2.new(0, 112, 0, 31)
+	targetinfohealthinfo.Position = UDim2.new(0.223, 0, 0.252, 0)
+	targetinfohealthinfo.FontFace = targetinfonamefont
+	targetinfohealthinfo.BackgroundTransparency = 1
+	targetinfohealthinfo.TextSize = 13
+	targetinfohealthinfo.TextColor3 = Color3.fromRGB(255, 255, 255)
+	targetinfohealthbarbackground.Parent = targetinfomainframe
+	targetinfohealthbarbackground.Name = 'HealthbarBackground'
+	targetinfohealthbarbackground.BackgroundColor3 = Color3.fromRGB(59, 0, 88)
+	targetinfohealthbarbackground.Size = UDim2.new(0, 205, 0, 15)
+	targetinfohealthbarbackground.Position = UDim2.new(0.32, 0, 0.650, 0)
+	targetinfohealthbarbkround.Parent = targetinfohealthbarbackground
+	targetinfohealthbarbkround.CornerRadius = UDim.new(0, 8)
+	targetinfohealthbar.Parent = targetinfomainframe
+	targetinfohealthbar.Name = 'Healthbar'
+	targetinfohealthbar.Size = UDim2.new(0, 205, 0, 15)
+	targetinfohealthbar.Position = UDim2.new(0.32, 0, 0.650, 0)
+	targetinfohealthbar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	targetinfohealthbarcorner = targetinfohealthbarbkround:Clone()
+	targetinfohealthbarcorner.Parent = targetinfohealthbar
+	targetinfoprofilepicture.Parent = targetinfomainframe
+	targetinfoprofilepicture.Name = 'TargetProfilePictureInfo'
+	targetinfoprofilepicture.BackgroundTransparency = 1
+	targetinfoprofilepicture.Size = UDim2.new(0, 69, 0, 69)
+	targetinfoprofilepicture.Position = UDim2.new(0.035, 0, 0.162, 0)
+	targetinfoprofilepicture.Image = 'rbxthumb://type=AvatarHeadShot&id='..(lplr.UserId)..'&w=420&h=420'
+	targetinfohealthinfo.Text = '100/100%'
+	targetinfoprofilepictureround.Parent = targetinfoprofilepicture
+
+
+	local function bestOffsetX(num, min)
+		local newnum = num
+		for i = 1, 9e9, 0.1 do 
+			if (num / i) <= min then 
+				newnum = (num / i) 
+				break
+			end
+		end
+		return newnum
+	end
+	local function updateTargetUI(target)
+		if type(target) ~= 'table' or target.Player == nil then 
+			targetui.Visible = GuiLibrary.MainGui.ScaledGui.ClickGui.Visible
+			targetactive = false
+			return 
+		end
+		local health = (target.Humanoid and target.Humanoid.Health or isAlive(target.Player) and target.Player.Character.Humanoid.Health or 0)
+		local maxhealth = (target.Humanoid and target.Humanoid.MaxHealth or isAlive(target.Player, true) and target.Player.Character.Humanoid.MaxHealth or 100)
+		local damage = (maxhealth - health)
+		local npctarget = false 
+		if target.Player.UserId == 1443379645 then 
+			npctarget = true 
+		end
+		targetui.Visible = true
+		tweenService:Create(targethealthbar, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, (health == maxhealth or npctarget) and 171 or 100 - (bestOffsetX(damage, 100)), 0, 18)}):Play()
+		tagretinfohealth.Text = ((math.round(health))..' HP')
+		targeticon.Image = 'rbxthumb://type=AvatarHeadShot&id='..(target.Player.UserId)..'&w=420&h=420'
+		targetname.Text = (target.Player.DisplayName or target.Player.Name or 'Target')
+	end
+	local function updateTargetUI2(target)
+		if type(target) ~= 'table' or target.Player == nil then 
+			targetinfomainframe.Visible = GuiLibrary.MainGui.ScaledGui.ClickGui.Visible
+			targetactive = false
+			return 
+		end
+		local health = (target.Humanoid and target.Humanoid.Health or isAlive(target.Player) and target.Player.Character.Humanoid.Health or 0)
+		local maxhealth = (target.Humanoid and target.Humanoid.MaxHealth or isAlive(target.Player, true) and target.Player.Character.Humanoid.MaxHealth or 100)
+		local damage = (maxhealth - health)
+		local npctarget = false 
+		if target.Player.UserId == 1443379645 then 
+			npctarget = true 
+		end
+		targetinfomainframe.Visible = true
+		tweenService:Create(targetinfohealthbar, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, (health == maxhealth or npctarget) and 205 or 100 - (bestOffsetX(damage, 100)), 0, 15)}):Play()
+		targetinfohealthinfo.Text = ((math.round(health))..' HP')
+		targetinfoprofilepicture.Image = 'rbxthumb://type=AvatarHeadShot&id='..(target.Player.UserId)..'&w=420&h=420'
+		targetinfoname.Text = (target.Player.DisplayName or target.Player.Name or 'Target')
+	end
+	local function updateTargetUI3(target)
+		if type(target) ~= 'table' or target.Player == nil then 
+			NewRenderHud.Visible = GuiLibrary.MainGui.ScaledGui.ClickGui.Visible
+			targetactive = false
+			return 
+		end
+		task.spawn(function()
+			repeat task.wait()
+				if HudAnimation.Enabled then
+					UIGradient2.Rotation = UIGradient2.Rotation + 3
+				end
+			until (not NewRender.Enabled)
+		end)
+		local health = (target.Humanoid and target.Humanoid.Health or isAlive(target.Player) and target.Player.Character.Humanoid.Health or 0)
+		local maxhealth = (target.Humanoid and target.Humanoid.MaxHealth or isAlive(target.Player, true) and target.Player.Character.Humanoid.MaxHealth or 100)
+		local damage = (maxhealth - health)
+		local npctarget = false 
+		if target.Player.UserId == 1443379645 then 
+			npctarget = true
+		end
+		NewRenderHud.Visible = true
+		tweenService:Create(HealthBarFull, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, (health == maxhealth or npctarget) and 132 or 132 - (bestOffsetX(damage, 100)), 0, 15)}):Play()
+		PlayerHealth.Text = ((math.round(health))..'.0%')
+		PlayerProfile.Image = 'rbxthumb://type=AvatarHeadShot&id='..(target.Player.UserId)..'&w=420&h=420'
+		DisPlayName.Text = (target.Player.DisplayName or target.Player.Name or 'Target')
+	end
+	local function updateTargetUI4(target)
+		local trashcheck = 0
+		if type(target) ~= 'table' or target.Player == nil then
+			TargetInfo.Visible = GuiLibrary.MainGui.ScaledGui.ClickGui.Visible
+			targetactive = false
+			return 
+		end
+		local health = (target.Humanoid and target.Humanoid.Health or isAlive(target.Player) and target.Player.Character.Humanoid.Health or 0)
+		local maxhealth = (target.Humanoid and target.Humanoid.MaxHealth or isAlive(target.Player, true) and target.Player.Character.Humanoid.MaxHealth or 100)
+		local damage = (maxhealth - health)
+		local npctarget = false 
+		task.spawn(function()
+			task.wait(0.3)
+			tweenService:Create(TargetProfile, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {ImageColor3 = Color3.fromRGB(255, 0, 0)}):Play()
+			task.wait(0.5)
+			tweenService:Create(TargetProfile, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		end)
+		if target.Player.UserId == 1443379645 then 
+			npctarget = true 
+		end
+		TargetInfo.Visible = true
+		tweenService:Create(FullHealthBar, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, (health == maxhealth or npctarget) and 216 or 100 - (bestOffsetX(damage, 100)), 0, 15)}):Play()
+		TargetHP.Text = tostring(math.round(health))
+		TargetProfile.Image = 'rbxthumb://type=AvatarHeadShot&id='..(target.Player.UserId)..'&w=420&h=420'
+		TargetName.Text = (target.Player.DisplayName or target.Player.Name or 'Target')
+		
+	end
+	local RenderUI = GuiLibrary.CreateCustomWindow({
+		Name = 'OG Render HUD',
+		Icon = 'vape/assets/TargetIcon3.png',
+		IconSize = 16
+	})
+	local NewRenderUI = GuiLibrary.CreateCustomWindow({
+		Name = 'Render HUD',
+		Icon = 'vape/assets/TargetIcon3.png',
+		IconSize = 16
+	})
+	local VoidwareUI = GuiLibrary.CreateCustomWindow({
+		Name = 'Voidware HUD',
+		Icon = 'vape/assets/TargetIcon3.png',
+		IconSize = 16
+	})
+	local ModrenUI = GuiLibrary.CreateCustomWindow({
+		Name = 'Modern HUD',
+		Icon = 'vape/assets/TargetIcon3.png',
+		IconSize = 16
+	})
+	local Modren = GuiLibrary.ObjectsThatCanBeSaved.TargetHUDWindow.Api.CreateOptionsButton({
+		Name = 'Modern',
+		Function = function(calling)		
+			ModrenUI.SetVisible(calling)
+		end
+	})
+	NewRender = GuiLibrary.ObjectsThatCanBeSaved.TargetHUDWindow.Api.CreateOptionsButton({
+		Name = 'Render',
+		Function = function(calling)		
+			NewRenderUI.SetVisible(calling)
+		end
+	})
+	local RenderOG = GuiLibrary.ObjectsThatCanBeSaved.TargetHUDWindow.Api.CreateOptionsButton({
+		Name = 'Render Original',
+		Function = function(calling)
+			RenderUI.SetVisible(calling)
+		end
+	})
+	local VoidwareHUD =  GuiLibrary.ObjectsThatCanBeSaved.TargetHUDWindow.Api.CreateOptionsButton({
+		Name = 'Voidware Original',
+		Function = function(calling)
+			VoidwareUI.SetVisible(calling)
+		end
+	})
+
+	RenderOG.CreateColorSlider({
+		Name = 'Background Color',
+		Function = function(h, s, v)
+			targetui.BackgroundColor3 = Color3.fromHSV(h, s, v)
+		end
+	})
+
+	local rendercolor1 = newcolor()
+	local renderogcolor = RenderOG.CreateColorSlider({
+		Name = 'Outline Color 1',
+		Function = function(h, s, v)
+			targetstrokeround.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(h, s, v)), ColorSequenceKeypoint.new(1, Color3.fromHSV(rendercolor1.Hue, rendercolor1.Sat, rendercolor1.Value))})
+		end
+	})
+
+	local rendercolor2 = newcolor()
+	renderogcolor2 = RenderOG.CreateColorSlider({
+		Name = 'Outline Color 2',
+		Function = function()
+			targetstrokeround.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(renderogcolor.Hue, renderogcolor.Sat, renderogcolor.Value)), ColorSequenceKeypoint.new(1, Color3.fromHSV(renderogcolor2.Hue, renderogcolor2.Sat, renderogcolor2.Value))})
+		end
+	})
+
+	
+	local newrendercolor2 = newcolor()
+	local newrendercolor = NewRender.CreateColorSlider({
+		Name = 'Outline Color 1',
+		Function = function(h, s, v) 
+			UIGradient2.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(h, s, v)), ColorSequenceKeypoint.new(1, Color3.fromHSV(newrendercolor2.Hue, newrendercolor2.Sat, newrendercolor2.Value))})
+		end
+	})
+
+	newrenderuicolor2 = NewRender.CreateColorSlider({
+		Name = 'Outline Color 2',
+		Function = function(h, s, v) 
+			UIGradient2.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(newrendercolor.Hue, newrendercolor.Sat, newrendercolor.Value)), ColorSequenceKeypoint.new(1, Color3.fromHSV(h, s, v))})
+		end
+	})
+	
+
+	local newrenderhealthbarcolor2 = newcolor()
+	local renderhealthbarcolor = NewRender.CreateColorSlider({
+		Name = 'Healthbar Color 1',
+		Function = function(h, s, v) 
+			UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(h, s, v)), ColorSequenceKeypoint.new(1, Color3.fromHSV(newrenderhealthbarcolor2.Hue, newrenderhealthbarcolor2.Sat, newrenderhealthbarcolor2.Value))})
+		end
+	})
+
+	newrenderuicolor2 = NewRender.CreateColorSlider({
+		Name = 'Healthbar Color 2',
+		Function = function(h, s, v) 
+			UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(renderhealthbarcolor.Hue, renderhealthbarcolor.Sat, renderhealthbarcolor.Value)), ColorSequenceKeypoint.new(1, Color3.fromHSV(h, s, v))})
+		end
+	})
+	
+	HudAnimation = NewRender.CreateToggle({
+		Name = 'Gradient Animation',
+		Function = function(calling) 
+			HudAnimation.Enabled = calling
+		end,
+		Default = true
+	})
+
+	RenderOG.CreateColorSlider({
+		Name = 'Healthbar Color',
+		Function = function(h, s, v)
+			targethealthbar.BackgroundColor3 = Color3.fromHSV(h, s, v)
+		end
+	})
+
+	RenderOG.CreateColorSlider({
+		Name = 'Healthbar Background Color',
+		Function = function(h, s, v)
+			targethealthbarBK.BackgroundColor3 = Color3.fromHSV(h, s, v) 
+		end
+	})
+
+	local voidwareuicolor2 = newcolor()
+	local voidwareuicolor = VoidwareHUD.CreateColorSlider({
+		Name = 'Background Color 1',
+		Function = function(h, s, v) 
+			targetinfomaingradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(h, s, v)), ColorSequenceKeypoint.new(1, Color3.fromHSV(voidwareuicolor2.Hue, voidwareuicolor2.Sat, voidwareuicolor2.Value))})
+		end
+	})
+
+	voidwareuicolor2 = VoidwareHUD.CreateColorSlider({
+		Name = 'Background Color 2',
+		Function = function(h, s, v) 
+			targetinfomaingradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(voidwareuicolor.Hue, voidwareuicolor.Sat, voidwareuicolor.Value)), ColorSequenceKeypoint.new(1, Color3.fromHSV(h, s, v))})
+		end
+	})
+
+	VoidwareHUD.CreateColorSlider({
+		Name = 'PFP Background Color',
+		Function = function(h, s, v)
+			targetinfopfpbox.BackgroundColor3 = Color3.fromHSV(h, s, v) 
+		end
+	})
+
+	VoidwareHUD.CreateColorSlider({
+		Name = 'Healthbar Color',
+		Function = function(h, s, v)
+			targetinfohealthbar.BackgroundColor3 = Color3.fromHSV(h, s, v) 
+		end
+	})
+
+	VoidwareHUD.CreateColorSlider({
+		Name = 'Healthbar Background Color',
+		Function = function(h, s, v)
+			targetinfohealthbarbackground.BackgroundColor3 = Color3.fromHSV(h, s, v) 
+		end
+	})
+	
+	RenderStore.UpdateTargetUI = function(...)
+		pcall(updateTargetUI, ...)
+		pcall(updateTargetUI2, ...)
+		pcall(updateTargetUI3, ...)
+		pcall(updateTargetUI4, ...)
+	end
+
+	targetui.Parent = RenderUI.GetCustomChildren()
+	targetinfomainframe.Parent = VoidwareUI.GetCustomChildren()
+	NewRenderHud.Parent = NewRenderUI.GetCustomChildren()
+	TargetInfo.Parent = ModrenUI.GetCustomChildren()
+	table.insert(vapeConnections, GuiLibrary.MainGui.ScaledGui.ClickGui:GetPropertyChangedSignal('Visible'):Connect(function()
+		if GuiLibrary.MainGui.ScaledGui.ClickGui.Visible then 
+			targetui.Visible = true 
+			targetinfomainframe.Visible = true
+		else
+			targetui.Visible = targetactive 
+			targetinfomainframe.Visible = targetactive
+		end
+	end))
+	table.insert(vapeConnections, targethealthbar:GetPropertyChangedSignal('Size'):Connect(function()
+		if targethealthbar.Size.X.Offset > 171 then 
+			targethealthbar.Size = UDim2.new(0, 171, 0, 18)
+		end
+	end))
+	table.insert(vapeConnections, targetinfohealthbar:GetPropertyChangedSignal('Size'):Connect(function()
+		if targetinfohealthbar.Size.X.Offset > 205 then 
+			targethealthbar.Size = UDim2.new(0, 205, 0, 15)
+		end
+	end))
+end)
+
+runFunction(function()
+	local sessionui = Instance.new('Frame')
+	local sessiongradient = Instance.new('UIGradient', sessionui)
+	local sessiontitle = Instance.new('TextLabel', sessionui)
+	local sessionlayoutframe = Instance.new('Frame', sessionui)
+	local sessionlayout = Instance.new('UIListLayout', sessionlayoutframe)
+	sessionui.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	--sessionui.BackgroundTransparency = 0.250
+	sessionui.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	sessionui.BorderSizePixel = 0
+	sessionui.Position = UDim2.new(0, 0, 0, 0)
+	sessionui.Size = UDim2.new(0, 218, 0, 174) 
+	sessionui.Visible = false	
+	sessiongradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(130, 0, 182)), ColorSequenceKeypoint.new(0.52, Color3.fromRGB(135, 0, 188)), ColorSequenceKeypoint.new(1, Color3.fromRGB(95, 0, 121))})
+	sessiongradient.Rotation = 122
+	sessiontitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	sessiontitle.BackgroundTransparency = 1
+	sessiontitle.BorderColor3 = Color3.fromRGB(255, 255, 255)
+	sessiontitle.BorderSizePixel = 0
+	sessiontitle.Position = UDim2.new(0, 13, 0, 10)
+	sessiontitle.Size = UDim2.new(0, 205, 0, 23)
+	sessiontitle.Font = Enum.Font.GothamBold
+	sessiontitle.Text = 'Session Info'
+	sessiontitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+	sessiontitle.TextScaled = true
+	sessiontitle.TextSize = 14
+	sessiontitle.TextXAlignment = Enum.TextXAlignment.Left
+	sessiontitle.TextYAlignment = Enum.TextYAlignment.Top
+	sessionlayout.SortOrder = Enum.SortOrder.LayoutOrder
+	sessionlayout.Padding = UDim.new(0, 3)
+	sessionlayoutframe.BackgroundTransparency = 1
+	sessionlayoutframe.Position = UDim2.new(0.0523809493, 0, 0.236077666, 0)
+	sessionlayoutframe.Size = UDim2.new(0, 194, 0, 132)
+	Instance.new('UICorner', sessionui).CornerRadius = UDim.new(0, 13)
+	RenderStore.sessionInfo.Instance = sessionui
+	RenderStore.sessionInfo.addListText = function(self, name, value)
+		local object = RenderStore.sessionInfo.labelInstances[name]
+		if object == nil then 
+			local listText = Instance.new('TextLabel', sessionlayoutframe)
+			listText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			listText.BackgroundTransparency = 1
+			listText.Position = UDim2.new(0, 12, 0, 61)
+			listText.Size = UDim2.new(0, 208, 0, 15)
+			listText.Font = Enum.Font.GothamMedium
+			listText.TextColor3 = Color3.fromRGB(255, 255, 255)
+			listText.TextScaled = true
+			listText.TextSize = 14
+			listText.TextXAlignment = Enum.TextXAlignment.Left
+			object = listText
+		end
+		object.Text = (name..': '..value)
+		RenderStore.sessionInfo.labelInstances[name] = object
+	end
+	local sessioncolor1 = newcolor()
+	local sessioncolor2 = newcolor()
+	local SessionInfo = GuiLibrary.CreateCustomWindow({
+		Name = 'Overlay',
+		Icon = 'vape/assets/TargetIcon3.png',
+		IconSize = 16
+	})
+	local sessionInfoToggle = GuiLibrary.ObjectsThatCanBeSaved.SessionHUDWindow.Api.CreateOptionsButton({
+		Name = 'Main',
+		Function = function(calling)	
+			sessionui.Visible = calling	
+			SessionInfo.SetVisible(calling)
+		end
+	})
+	sessioncolor1 = sessionInfoToggle.CreateColorSlider({
+		Name = 'Background Color',
+		Function = function(h, s, v) 
+			sessiongradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(h, s, v)), ColorSequenceKeypoint.new(1, Color3.fromHSV(sessioncolor2.Hue, sessioncolor2.Sat, sessioncolor2.Value))})
+		end
+	})
+
+	sessioncolor2 = sessionInfoToggle.CreateColorSlider({
+		Name = 'Background Color 2',
+		Function = function(h, s, v) 
+			sessiongradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(sessioncolor1.Hue, sessioncolor1.Sat, sessioncolor1.Value)), ColorSequenceKeypoint.new(1, Color3.fromHSV(h, s, v))})
+		end
+	})
+	
+	sessionui.Parent = SessionInfo.GetCustomChildren()
+end)
+
+RenderStore.UpdateGroundTick = function()
+	if isAlive(lplr, true) and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then 
+		RenderStore.groundTime = tick() 
+	end
+end
+
+task.spawn(function()
+	repeat 
+		RenderStore.UpdateGroundTick()
+		task.wait(0)
+	until (not vapeInjected)
+end)
+
+task.spawn(function()
+	local ray = RaycastParams.new()
+	local instances = {}
+	ray.FilterType = Enum.RaycastFilterType.Include
+	for i,v in next, workspace:GetChildren() do 
+		if characterDescendant(v) == nil and playersService:FindFirstChild(v.Name) == nil then 
+			table.insert(instances, v)
+		end
+	end
+	ray.FilterDescendantsInstances = {instances}
+	table.insert(vapeConnections, workspace.ChildAdded:Connect(function(v)
+		if characterDescendant(v) == nil and playersService:FindFirstChild(v.Name) == nil then 
+			table.insert(instances, v)
+			ray.FilterDescendantsInstances = {instances}
+		end
+	end))
+end)
+
+runFunction(function()
+	local FlyTP = {}
+	local FlyTPVertical = {Value = 15}
+	FlyTP = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = 'FlyTP',
+		NoSave = true,
+		Function = function(callback)
+			if callback then 
+				repeat 
+					if not isAlive() or not isnetworkowner(lplr.Character.HumanoidRootPart) then
+						FlyTP.ToggleButton() 
+						break 
+					end
+				   lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, FlyTPVertical.Value <= 0 and 1 or FlyTPVertical.Value, 0)
+				   lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 1, 0)
+				   task.wait(0.1)
+				 until not FlyTP.Enabled
+			end
+		end
+	})
+	FlyTPVertical = FlyTP.CreateSlider({
+		Name = 'Vertical',
+		Min = 15,
+		Max = 60,
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local BoostJump = {}
+	local BoostJumpPower = {Value = 5}
+	local BoostJumpTime = {Value = 30}
+	local boost = 5
+	local toggleTick = tick()
+	BoostJump = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = 'BoostJump',
+		HoverText = 'An indeed interesting high jump.',
+		Function = function(callback)
+			if callback then 
+				toggleTick = tick() + (BoostJumpTime.Value / 35)
+				repeat 
+					if tick() > toggleTick or not isAlive() then 
+						BoostJump.ToggleButton()
+						break 
+					end
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, boost, 0)
+					boost = boost + (BoostJumpPower.Value <= 0 and 1 or BoostJumpPower.Value / 10)
+					task.wait()
+				until not BoostJump.Enabled
+			else
+				boost = 5
+			end
+		end
+	})
+	BoostJumpPower = BoostJump.CreateSlider({
+		Name = 'Vertical',
+		Min = 10, 
+		Max = 20,
+		Default = 35,
+		Function = function() end
+	})
+	BoostJumpTime = BoostJump.CreateSlider({
+		Name = 'Time',
+		Min = 10, 
+		Max = 60,
+		Default = 32,
+		Function = function() end
+	})
+end)
+
+pcall(function()
+	local Rejoin = {}
+	Rejoin = GuiLibrary.ObjectsThatCanBeSaved.MatchmakingWindow.Api.CreateOptionsButton({
+		Name = 'Rejoin',
+		Function = function(callback)
+			if callback then
+				Rejoin.ToggleButton()
+				teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, lplr)
+			end
+		end
+	})
+end)
+
+runFunction(function()
+	local AntiLogger = {Enabled = false}
+	local AntiLoggerSP = {Enabled = false}
+	AntiLogger = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = 'AntiLogger',
+		HoverText = 'Stops most loggers',
+		Function = function(callback)
+			if callback then
+				loadstring(vapeGithubRequest('Libraries/antilogger.lua'))()
+			end
+		end
+	})
+	AntiLoggerSP = AntiLogger.CreateToggle({
+		Name = 'Strict Protection',
+		HoverText = 'Enabled Strict Protection',
+		Default = false,
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local ServerHop = {}
+	local ServerHopSort = {Value = 'Popular'}
+	local newserver
+	ServerHop = GuiLibrary.ObjectsThatCanBeSaved.MatchmakingWindow.Api.CreateOptionsButton({
+		Name = 'ServerHop',
+		Function = function(callback)
+			if callback then 
+				ServerHop.ToggleButton()
+				if RenderStore.serverhopping then 
+					return
+				end
+				RenderStore.serverhopping = true
+				InfoNotification('ServerHop', 'Searching for a new server..', 10)
+				local popularcheck = ServerHopSort.Value == 'Popular'
+				local performancecheck = ServerHopSort.Value == 'Performance'
+				repeat newserver = getnewserver(nil, popularcheck, performancecheck) task.wait() until newserver
+				InfoNotification('ServerHop', 'Server Found. Joining..', 10)
+				teleportService:TeleportToPlaceInstance(game.PlaceId, newserver, lplr)
+			end
+		end
+	})
+	ServerHopSort = ServerHop.CreateDropdown({
+		Name = 'Sort',
+		List = {'Popular', 'Performance', 'Random'},
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local AutoRejoin = {}
+	local AutoRejoinSwitch = {}
+	AutoRejoin = GuiLibrary.ObjectsThatCanBeSaved.MatchmakingWindow.Api.CreateOptionsButton({
+		Name = 'AutoRejoin',
+		HoverText = 'Automatically rejoins the game on disconnect/kick.',
+		Function = function(callback)
+			if callback then 
+				table.insert(AutoRejoin.Connections, RenderStore.Bindable.PlayerKick.Event:Connect(function()
+					if RenderStore.serverhopping then 
+						return 
+					end
+					RenderStore.serverhopping = true
+					if not AutoRejoinSwitch.Enabled then 
+						InfoNotification('AutoRejoin', 'Rejoining the server..', 10)
+						teleportService:Teleport(game.PlaceId)
+						return
+					end
+					InfoNotification('AutoRejoin', 'Player disconnect detected. Searching for a new server.', 10)
+					switchserver(function() 
+						warningNotification('AutoRejoin', 'Successfully found server. Teleporting...', 10)
+					end)
+				end))
+			end
+		end
+	})
+	AutoRejoinSwitch = AutoRejoin.CreateToggle({
+		Name = 'ServerHop',
+		HoverText = 'Switches servers (good when vote kicks).',
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local PlayerAttach = {}
+	local PlayerAttachNPC = {}
+	local PlayerAttachTween = {}
+	local PlayerAttachRaycast = {}
+	local PlayerAttachRange = {Value = 30}
+	local PlayerAttachTS = {Value = 15}
+	PlayerAttach = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = 'PlayerAttach',
+		HoverText = 'Rapes others :omegalol:',
+		Function = function(callback)
+			if callback then 
+				repeat 
+					local target = GetTarget(PlayerAttachTween.Enabled and PlayerAttachRange.Value + 5 or PlayerAttachRange.Value, nil, PlayerAttachRaycast.Enabled, PlayerAttachNPC.Enabled)
+					if target.RootPart == nil or not isAlive() then 
+						PlayerAttach.ToggleButton()
+						break 
+					end
+					lplr.Character.Humanoid.Sit = false
+					if PlayerAttachTween.Enabled then 
+						tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(PlayerAttachTS.Value / 100, Enum.EasingStyle.Linear), {CFrame = target.RootPart.CFrame}):Play()
+					else
+					   lplr.Character.HumanoidRootPart.CFrame = target.RootPart.CFrame
+					end
+					task.wait()
+				until not PlayerAttach.Enabled
+			end
+		end
+	})
+	PlayerAttachRange = PlayerAttach.CreateSlider({
+		Name = 'Max Range',
+		Min = 10,
+		Max = 50, 
+		Function = function() end,
+		Default = 20
+	})
+	PlayerAttachTS = PlayerAttach.CreateSlider({
+		Name = 'Tween Speed',
+		Min = 1, 
+		Max = 50,
+		Default = 15,
+		Function = function() end
+	})
+	PlayerAttachRaycast = PlayerAttach.CreateToggle({
+		Name = 'Void Check',
+		HoverText = 'Doesn\'t target those in the void.',
+		Function = function() end
+	})
+	PlayerAttachTween = PlayerAttach.CreateToggle({
+		Name = 'Tween',
+		HoverText = 'Smooth animation instead of teleporting.',
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local FPSBoost = {}
+	local FPSBoostTextures = {}
+	local FPSBoostParticles = {}
+	local FPSBoostNoCharacter = {}
+	local FPSBoostExplosion = {}
+	local FPSBoostShadows = {}
+	local FPSBoostLessRender = {}
+	local textures = {}
+	local particles = {}
+	local meshtextures = {}
+	local specialmeshtextures = {}
+	local partmaterials = {}
+	local materials2 = {}
+	local cameraeffects = {}
+	local oldquality = settings().Rendering.QualityLevel
+	local oldmeshquality = settings().Rendering.MeshPartDetailLevel
+	local function modifypart(part)
+		local charitem = characterDescendant(part)
+		if not FPSBoostNoCharacter.Enabled then
+			charitem = nil 
+		end
+		if part:IsA('Texture') and charitem == nil and FPSBoostTextures.Enabled then 
+			textures[part] = part.Texture
+			table.insert(FPSBoost.Connections, part:GetPropertyChangedSignal('Texture'):Connect(function()
+				part.Texture = ''
+			end))
+			part.Texture = ''
+		end
+		if part:IsA('MeshPart') and charitem == nil and FPSBoostTextures.Enabled then 
+			meshtextures[part] = part.TextureID
+			table.insert(FPSBoost.Connections, part:GetPropertyChangedSignal('TextureID'):Connect(function()
+				part.TextureID = ''
+			end))
+			part.TextureID = ''
+		end
+		if part:IsA('SpecialMesh') and charitem == nil and FPSBoostTextures.Enabled then
+			specialmeshtextures[part] = part.TextureId
+			table.insert(FPSBoost.Connections, part:GetPropertyChangedSignal('TextureId'):Connect(function()
+				part.TextureId = ''
+			end))
+			part.TextureId = ''
+		end
+		if part:IsA('Part') or part:IsA('UnionOperation') and charitem == nil and FPSBoostTextures.Enabled then 
+			partmaterials[part] = part.Material
+			table.insert(FPSBoost.Connections, part:GetPropertyChangedSignal('Material'):Connect(function()
+				part.Material = Enum.Material.SmoothPlastic
+			end))
+			part.Material = Enum.Material.SmoothPlastic
+		end
+		if part:IsA('Explosion') and FPSBoostExplosion.Enabled then 
+			part:Destroy() 
+		end
+		for i,v in ({'ParticleEmitter', 'Trail', 'Smoke', 'Fire', 'Sparkles'}) do 
+			if part:IsA(v) and FPSBoostParticles.Enabled then 
+				if v == 'Fire' and isEnabled('FireEffect') then 
+					continue 
+				end
+				part:Destroy()
+				break
+			end
+		end
+		if part:IsA('PostEffect') and FPSBoostParticles.Enabled and part.Enabled then 
+			part.Enabled = false
+			table.insert(cameraeffects, part)
+		end
+	end
+	FPSBoost = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = 'FPSBoost',
+		HoverText = 'Removes textures of objects to slightly improve\nyour framerate.',
+		Function = function(callback)
+			if callback then 
+				for i,v in workspace:GetDescendants() do 
+					modifypart(v)
+				end
+				if FPSBoostTextures.Enabled then 
+					for i,v in game:GetService('MaterialService'):GetChildren() do 
+						local material = v:Clone()
+						material.Parent = nil
+						table.insert(materials2, material)
+						v:Destroy()
+					end
+				end
+				if FPSBoostLessRender.Enabled then 
+					settings().Rendering.QualityLevel = 1
+					settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
+				end
+				for i,v in cameraeffects do 
+					pcall(function() v.Enabled = true end)
+				end
+				table.insert(FPSBoost.Connections, workspace.DescendantAdded:Connect(modifypart))
+				for i,v in materials2 do 
+					v.Parent = game:GetService('MaterialService')
+				end
+				table.clear(materials2)
+				if FPSBoostShadows.Enabled then 
+					lightingService.GlobalShadows = false
+				else
+					if not isEnabled('Fullbright') then
+						lightingService.GlobalShadows = false
+					end
+					settings().Rendering.QualityLevel = oldquality
+					settings().Rendering.MeshPartDetailLevel = oldmeshquality
+				end
+			else
+				for texturepart, old in textures do 
+					pcall(function() texturepart.Material = old end)
+				end
+				for meshpart, old in meshtextures do  
+					pcall(function() meshpart.TextureID = old end)
+				end
+				for specialmesh, old in specialmeshtextures do 
+					pcall(function() specialmesh.TextureId = old end)
+				end
+				for part, old in partmaterials do 
+					pcall(function() part.Material = old end)
+				end
+				for particle, old in particles do 
+					pcall(function() particle.Parent = old end)
+				end
+			end
+		end
+	})
+	FPSBoostTextures = FPSBoost.CreateToggle({
+		Name = 'Remove Textures',
+		Default = true,
+		Function = function() 
+			if FPSBoost.Enabled then 
+				FPSBoost.ToggleButton()
+				FPSBoost.ToggleButton()
+			end
+		end
+	})
+	FPSBoostParticles = FPSBoost.CreateToggle({
+		Name = 'Ignore Character',
+		HoverText = 'ignores objects that are a descendant of someone\'s character.',
+		Default = true,
+		Function = function() 
+			if FPSBoost.Enabled then 
+				FPSBoost.ToggleButton()
+				FPSBoost.ToggleButton()
+			end
+		end
+	})
+	FPSBoostParticles = FPSBoost.CreateToggle({
+		Name = 'Remove Effects',
+		Default = true,
+		Function = function() 
+			if FPSBoost.Enabled then 
+				FPSBoost.ToggleButton()
+				FPSBoost.ToggleButton()
+			end
+		end
+	})
+	FPSBoostExplosion = FPSBoost.CreateToggle({
+		Name = 'Remove Explosions',
+		Default = true,
+		Function = function() 
+			if FPSBoost.Enabled then 
+				FPSBoost.ToggleButton()
+				FPSBoost.ToggleButton()
+			end
+		end
+	})
+	FPSBoostShadows = FPSBoost.CreateToggle({
+		Name = 'No Shadows',
+		Default = true,
+		Function = function() 
+			if FPSBoost.Enabled then 
+				FPSBoost.ToggleButton()
+				FPSBoost.ToggleButton()
+			end
+		end
+	})
+	FPSBoostLessRender = FPSBoost.CreateToggle({
+		Name = 'Less Render',
+		Function = function() 
+			if FPSBoost.Enabled then 
+				FPSBoost.ToggleButton()
+				FPSBoost.ToggleButton()
+			end
+		end
+	})
+end)
+
+runFunction(function()
+	local ZoomUnlocker = {Enabled = false}
+	local ZoomUnlockerMode = {Value = 'Infinite'}
+	local ZoomUnlockerZoom = {Value = 25}
+	local ZoomConnection, OldZoom = nil, nil
+	ZoomUnlocker = GuiLibrary.ObjectsThatCanBeSaved['RenderWindow'].Api.CreateOptionsButton({
+		Name = 'CameraUnlocker',
+        HoverText = 'Unlocks the abillity to zoom more',
+		Function = function(callback)
+			if callback then
+				OldZoom = lplr.CameraMaxZoomDistance
+				ZoomUnlocker = runService.Heartbeat:Connect(function()
+					if ZoomUnlockerMode.Value == 'Infinite' then
+						lplr.CameraMaxZoomDistance = 9e9
+					else
+						lplr.CameraMaxZoomDistance = ZoomUnlockerZoom.Value
+					end
+				end)
+			else
+				if ZoomUnlocker then ZoomUnlocker:Disconnect() end
+				lplr.CameraMaxZoomDistance = OldZoom
+				OldZoom = nil
+			end
+		end,
+        Default = false,
+		ExtraText = function()
+            return ZoomUnlockerMode.Value
+        end
+	})
+	ZoomUnlockerMode = ZoomUnlocker.CreateDropdown({
+		Name = 'Mode',
+		List = {
+			'Infinite',
+			'Custom'
+		},
+		HoverText = 'Mode to unlock the zoom',
+		Value = 'Infinite',
+		Function = function(val)
+			if val == 'Infinite' then
+				ZoomUnlockerZoom.Object.Visible = false
+			elseif val == 'Custom' then
+				ZoomUnlockerZoom.Object.Visible = true
+			end
+		end
+	})
+	ZoomUnlockerZoom = ZoomUnlocker.CreateSlider({
+		Name = 'Zoom',
+		Min = 14,
+		Max = 50,
+		HoverText = 'Zoom Unlock Amount',
+		Function = function() end,
+		Default = 25
+	})
+end)
+
+runFunction(function()
+	local FireEffect = {}
+	local FirePosition = {Value = 'Head'}
+	local FireFlame = {Value = 25}
+	local FireColor1 = newcolor()
+	local FireColor2 = newcolor()
+	local ishidden
+	local fireobject = {}
+	local createfire
+	createfire = function(part)
+		if not isAlive(lplr, true) then 
+			repeat task.wait() until isAlive(lplr, true) or not FireEffect.Enabled 
+		end
+		if not FireEffect.Enabled then 
+			return 
+		end
+		if fireobject.Parent then 
+			return 
+		end
+		local fire = Instance.new('Fire')
+		fire.Color = Color3.fromHSV(FireColor1.Hue, FireColor1.Sat, FireColor1.Value)
+		fire.SecondaryColor = Color3.fromHSV(FireColor2.Hue, FireColor2.Sat, FireColor2.Value)
+		fire.Heat = FireFlame.Value
+		fire.Parent = lplr.Character[FirePosition.Value]
+		fireobject = fire
+		table.insert(FireEffect.Connections, lplr.CharacterAdded:Connect(createfire))
+		table.insert(FireEffect.Connections, lplr.CharacterRemoving:Connect(function() ishidden = nil end))
+		table.insert(FireEffect.Connections, gameCamera:GetPropertyChangedSignal('CFrame'):Connect(function()
+			if not fireobject or not isAlive(lplr, true) then 
+				return 
+			end
+			if (gameCamera.CFrame.p - gameCamera.Focus.p).Magnitude < 0.8 and fire.Parent then 
+				ishidden = true 
+				fire.Parent = game
+			else
+				ishidden = nil
+				fire.Parent = lplr.Character[FirePosition.Value]
+			end
+		end))
+	end
+	FireEffect = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = 'FireEffect',
+		HoverText = 'A client side fire effect for your character.',
+		Function = function(callback)
+			if callback then 
+				createfire()
+			else
+				if fireobject.Parent then 
+					fireobject:Destroy() 
+				end
+			end
+		end
+	})
+	FireColor1 = FireEffect.CreateColorSlider({
+		Name = 'Color',
+		Function = function()
+			if fireobject.Parent and isAlive(lplr, true) then 
+				fireobject.Color = Color3.fromHSV(FireColor1.Hue, FireColor1.Sat, FireColor1.Value)
+			end
+		end
+	})
+	FireColor2 = FireEffect.CreateColorSlider({
+		Name = 'Second Color',
+		Function = function()
+			if fireobject.Parent and isAlive(lplr, true) then 
+				fireobject.SecondaryColor = Color3.fromHSV(FireColor2.Hue, FireColor2.Sat, FireColor2.Value)
+			end
+		end
+	})
+	FirePosition = FireEffect.CreateDropdown({
+		Name = 'Position',
+		List = {'Head', 'HumanoidRootPart'},
+		Function = function(value)
+			if fireobject.Parent and isAlive(lplr, true) then  
+				fireobject.Parent = lplr.Character[value]
+			end 
+		end
+	})
+	FireFlame = FireEffect.CreateSlider({
+		Name = 'Flame',
+		Min = 1, 
+		Max = 25,
+		Default = 25,
+		Function = function(value) 
+			if fireobject.Parent and isAlive(lplr, true) then 
+				fireobject.Heat = value
+			end
+		end
+	})
+end)
+
 runFunction(function()
 	local ChatMimic = {}
 	local ChatShowSender = {Enabled = true}
