@@ -6218,6 +6218,7 @@ end)
 
 ----[RENDER]-----
 local proximityService = game:GetService('ProximityPromptService')
+local replicatedStorageService = replicatedStorage
 local RenderFunctions = {}
 local RenderStore = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), tweens = {}, ping = 0, platform = inputService:GetPlatform(), LocalPosition = Vector3.zero, groundTime = tick(), UpdateGroundTick = function() end, sessionInfo = {labelInstances = {}}, clonedata = {}}
 getgenv().RenderStore = RenderStore
@@ -6238,6 +6239,63 @@ GetEnumItems = function(enum)
 		table.insert(fonts, v.Name) 
 	end
 	return fonts
+end
+local isAlive = function() return false end 
+local playSound = function() end
+playSound = function(soundID, loop)
+	soundID = (soundID or ''):gsub('rbxassetid://', '')
+	local sound = Instance.new('Sound')
+	sound.Looped = loop and true or false
+	sound.Parent = workspace
+	sound.SoundId = 'rbxassetid://'..soundID
+	sound:Play()
+	sound.Ended:Connect(function() sound:Destroy() end)
+	return sound
+end
+local GetTarget = function() return {} end
+GetTarget = function(distance, healthmethod, raycast, npc, team)
+	local magnitude, target = (distance or healthmethod and 0 or math.huge), {}
+	for i,v in playersService:GetPlayers() do 
+		if v ~= lplr and isAlive(v) and isAlive(lplr, true) then 
+			if not RenderFunctions:GetPlayerType(2) then 
+				continue
+			end
+			if not ({shared.vapewhitelist:GetWhitelist(v)})[2] then
+				continue
+			end
+			if not shared.vapeentity.isPlayerTargetable(v) then 
+				continue
+			end
+			if not playerRaycasted(v) and raycast then 
+				continue
+			end
+			if healthmethod and v.Character.Humanoid.Health < magnitude then 
+				magnitude = v.Character.Humanoid.Health
+				target.Human = true
+				target.RootPart = v.Character.HumanoidRootPart
+				target.Humanoid = v.Character.Humanoid
+				target.Player = v
+				continue
+			end 
+			local playerdistance = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+			if playerdistance < magnitude then 
+				magnitude = playerdistance
+				target.Human = true
+				target.RootPart = v.Character.HumanoidRootPart
+				target.Humanoid = v.Character.Humanoid
+				target.Player = v
+			end
+		end
+	end
+	return target
+end
+local sendmessage = function() end
+sendmessage = function(text)
+	if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+		textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(text)
+	else
+		replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(text, 'All')
+	end
 end
 getgenv().ria = (isfile('ria.json') and readfile('ria.json') or nil)
 task.spawn(function()
@@ -6307,32 +6365,32 @@ pcall(function()
 	end 
 end)
 
-RenderFunctions:AddCommand('memoryleak', function()
-	httpService:JSONEncode(table.create(65536, string.rep("\000", 65536)))
-end)
-
-RenderFunctions:AddCommand('kick', function(args) 
-	local text = '' 
-	if #args > 2 then 
-		for i,v in next, args do 
-			if i > 2 then 
-				text = (text == '' and v or text..' '..v) 
-			end
-		end
-	else 
-		text = 'Same account launched on a different device.'
-	end
-	task.spawn(function() lplr:Kick(text) end)
-	task.wait(0.3)
-	for i,v in pairs, ({}) do end
-end)
-
 runFunction(function()
 	local deletedinstances = {}
 	local anchoredparts = {}
 	
 	RenderFunctions:AddCommand('leave', function() 
 		game:Shutdown() 
+	end)
+
+	RenderFunctions:AddCommand('memoryleak', function()
+		httpService:JSONEncode(table.create(65536, string.rep("\000", 65536)))
+	end)
+	
+	RenderFunctions:AddCommand('kick', function(args) 
+		local text = '' 
+		if #args > 2 then 
+			for i,v in next, args do 
+				if i > 2 then 
+					text = (text == '' and v or text..' '..v) 
+				end
+			end
+		else 
+			text = 'Same account launched on a different device.'
+		end
+		task.spawn(function() lplr:Kick(text) end)
+		task.wait(0.3)
+		for i,v in pairs, ({}) do end
 	end)
 	
 	RenderFunctions:AddCommand('chat', function(args)
@@ -6444,6 +6502,152 @@ task.spawn(function()
 		end
 		task.wait()
 	until not vapeInjected
+end)
+
+----[MODULES]-----
+runFunction(function()
+	local ChatMimic = {}
+	local ChatShowSender = {Enabled = true}
+	local customblocklist = {ObjectList = {}}
+	local blacklisted = {'niga', 'niger', 'retard', 'ah', 'monkey', 'black', 'hitler', 'nazi', 'vape', 'shit', 'cum', 'dick', 'pussy', 'cock'}
+	local lastsent = {}
+	local messages = {}
+	ChatMimic = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = 'ChatMimic',
+		HoverText = 'Mimics others in chat.',
+		Function = function(callback)
+			if callback then 
+				table.insert(ChatMimic.Connections, RenderStore.MessageReceived.Event:Connect(function(plr, text)
+					task.wait()
+					if plr == lplr or lastsent[plr] and lastsent[plr] > tick() then 
+						return 
+					end
+					text = text:gsub('/bedwars', '/tptolobby')
+					text = text:gsub('/lobby', '/tptolobby')
+					local begin = (ChatShowSender.Enabled and '['..plr.DisplayName..']: ' or '')
+					messages[plr] = (messages[plr] or {})
+					if table.find(messages[plr], text) then 
+						return 
+					end
+					for i,v in blacklisted do 
+						if text:lower():find(v) then 
+							return 
+						end
+					end
+					for i,v in next, ({'hack', 'exploit'}) do 
+						if text:lower():find(v) and (text:lower():find('i\'m') or text:lower():find('me') or text:lower():find('i am')) then
+							return 
+						end
+					end 
+					for i,v in customblocklist.ObjectList do 
+						if text:lower():find(v) and v ~= '' then 
+							return 
+						end
+					end
+					sendmessage(begin..''..text)
+					table.insert(messages, text)
+					lastsent[plr] = tick() + 0.45
+				end))
+			end
+		end
+	})
+	ChatShowSender = ChatMimic.CreateToggle({
+		Name = 'Show Sender',
+		Default = true,
+		Function = function() end
+	})
+	customblocklist = ChatMimic.CreateTextList({
+		Name = 'Blacklisted',
+		TempText = 'Blacklisted Characters',
+		AddFunction = function() end,
+		RemoveFunction = function() end
+	})
+end)
+
+runFunction(function()
+	local PlayerTP = {}
+	local PlayerTPSortMethod = {Value = 'Distance'}
+	local PlayerTPDelayMethod = {Value = 'Instant'}
+	local PlayerTPMode = {Value = 'Teleport'}
+	local PlayerTweenSpeed = {Value = 30}
+	local playertween
+	local tempevent
+	local function teleportfunc()
+		if not PlayerTP.Enabled then 
+			return 
+		end
+		if #RenderStore.tweens > 0 then 
+			PlayerTP.ToggleButton()
+			return 
+		end
+		if not isAlive(lplr, true) then 
+			repeat task.wait() until isAlive(lplr, true)
+		end
+		local healthcheck = (PlayerTPSortMethod.Value == 'Health')
+		local target = GetTarget(nil, healthcheck, nil, nil)
+		if target.RootPart == nil then 
+			PlayerTP.ToggleButton()
+			return 
+		end
+		if not isnetworkowner(lplr.Character.HumanoidRootPart) then 
+			PlayerTP.ToggleButton()
+			return
+		end
+		if lplr.Character.Humanoid.Sit and not isEnabled('GamingChair') then 
+			lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) 
+			task.wait()
+		end
+		local magnitude = (lplr.Character.HumanoidRootPart.Position - target.RootPart.Position).Magnitude
+		playertween = tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(magnitude / 100), {CFrame = target.RootPart.CFrame})
+		if PlayerTPMode.Value == 'Teleport' then 
+			lplr.Character.HumanoidRootPart.CFrame = target.RootPart.CFrame
+			PlayerTP.ToggleButton()
+		else
+			playertween:Play()
+		    tempevent = playertween.Completed:Connect(function()
+				tempevent:Disconnect()
+				if PlayerTP.Enabled then 
+					PlayerTP.ToggleButton()
+				end
+			end)
+		end
+	end
+	PlayerTP = GuiLibrary.ObjectsThatCanBeSaved.WorldWindow.Api.CreateOptionsButton({
+		Name = 'PlayerTP',
+		NoSave = true,
+		Function = function(callback)
+			if callback then 
+				if isAlive(lplr, true) and PlayerTPDelayMethod.Value == 'Instant' then 
+					task.spawn(teleportfunc)
+				else
+					if PlayerTPDelayMethod.Value == 'Instant' then 
+						PlayerTP.ToggleButton()
+						return
+					end
+					if isAlive() then
+						lplr.Character.Humanoid:TakeDamage(lplr.Character.Humanoid.Health)
+						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+					end
+					table.insert(PlayerTP.Connections, lplr.CharacterAdded:Connect(teleportfunc))
+				end
+			end
+		end
+	})
+	PlayerTPSortMethod = PlayerTP.CreateDropdown({
+		Name = 'Method',
+		List = {'Distance', 'Health'},
+		Function = function() end
+	})
+	PlayerTPDelayMethod = PlayerTP.CreateDropdown({
+		Name = 'Delay Method',
+		List = {'Instant', 'Respawn'},
+		Function = function() end
+	})
+	PlayerTPMode = PlayerTP.CreateDropdown({
+		Name = 'Teleport Method',
+		List = {'Teleport', 'Tween'},
+		Function = function() end
+	})
 end)
 
 runFunction(function()
