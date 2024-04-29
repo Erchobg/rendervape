@@ -10944,7 +10944,7 @@ runFunction(function()
 	local ClanNotifier = {}
 	local clanstonotify = {ObjectList = {}}
 	local notifiedplayers = {}
-	local autofamousclan = {Enabled = false, clan = {"PVP", "ALIEN", "69", "GDoggs", "Pluto", "gg", "IPS", "CZ", "L8R"}}
+	local autofamousclan = {Enabled = false, clans = {"PVP", "ALIEN", "69", "GDoggs", "Pluto", "gg", "IPS", "CZ", "L8R"}}
 	local function clanFunction(plr)
 		repeat task.wait() until plr:GetAttribute('ClanTag')
 		if table.find(notifiedplayers, plr) then
@@ -10991,11 +10991,11 @@ runFunction(function()
 		Name = 'AddFamousClan',
 		Function = function(call)
 			if call then
-				for i,v in pairs(autofamousclan.clan) do
+				for i,v in autofamousclan.clans do
 					table.insert(clanstonotify.ObjectList, v)
 				end
 			else
-				for i,v in pairs(autofamousclan.clan) do
+				for i,v in autofamousclan.clans do
 					table.remove(clanstonotify.ObjectList, v)
 				end
 			end
