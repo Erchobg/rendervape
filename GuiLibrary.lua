@@ -1,5 +1,5 @@
 if shared.VapeExecuted then
-	local VERSION = "4.10"..(shared.VapePrivate and " PRIVATE" or "").." "..readfile("vape/commithash.txt"):sub(1, 6)
+	local VERSION = "Render Vape"
 	local baseDirectory = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local vapeAssetTable = {
 		["vape/assets/AddItem.png"] = "rbxassetid://13350763121",
@@ -60,7 +60,7 @@ if shared.VapeExecuted then
 		["vape/assets/ToggleArrow.png"] = "rbxassetid://13350792786",
 		["vape/assets/UpArrow.png"] = "rbxassetid://13350793386",
 		["vape/assets/UtilityIcon.png"] = "rbxassetid://13350793918",
-		["vape/assets/WarningNotification.png"] = "rbxassetid://13350794868",
+		["vape/assets/WarningNotification.png"] = "rbxassetid://17047753431",
 		["vape/assets/WindowBlur.png"] = "rbxassetid://13350795660",
 		["vape/assets/WorldIcon.png"] = "rbxassetid://13350796199",
 		["vape/assets/VapeIcon.png"] = "rbxassetid://13350808582",
@@ -70,7 +70,8 @@ if shared.VapeExecuted then
 		["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 		["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 	}
-	local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
+	local getcustomasset = function(location) return vapeAssetTable[location] or "" end
+	local executor = (identifyexecutor and identifyexecutor() or getexecutorname and getexecutorname() or 'your executor')
 	local customassetcheck = (getsynasset or getcustomasset) and true
 	local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function() end 
 	local isfile = isfile or function(file)
@@ -101,10 +102,11 @@ if shared.VapeExecuted then
 	local tweenService = game:GetService("TweenService")
 	local guiService = game:GetService("GuiService")
 	local textService = game:GetService("TextService")
+	local gethui = gethui or function()
+		return game:GetService("CoreGui")
+	end
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
-
-	local Platform = inputService:GetPlatform()
 
 	GuiLibrary.ColorStepped = runService.RenderStepped:Connect(function()
 		local col = (tick() * 0.25 * GuiLibrary.RainbowSpeed) % 1 
@@ -146,7 +148,7 @@ if shared.VapeExecuted then
 	local vapeCachedAssets = {}
 	local function vapeGithubRequest(scripturl)
 		if not isfile("vape/"..scripturl) then
-			local suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Erchobg/rendervape/"..readfile("vape/commithash.txt").."/"..scripturl, true) end)
+			local suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/"..scripturl, true) end)
 			assert(suc, res)
 			assert(res ~= "404: Not Found", res)
 			if scripturl:find(".lua") then res = "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..res end
@@ -483,13 +485,8 @@ if shared.VapeExecuted then
 		local touchedButton = false
 		touchButton.MouseButton1Down:Connect(function()
 			touchedButton = true
-			local touchtick = tick()
-			local touchposition = inputService:GetMouseLocation()
-			repeat 
-				task.wait()
-				if not touchedButton then break end
-				touchedButton = (inputService:GetMouseLocation() - touchposition).Magnitude < 3
-			until (tick() - touchtick) > 1 or not touchedButton
+			local touchtick2 = tick()
+			repeat task.wait() until (tick() - touchtick2) > 1 or not touchedButton
 			if touchedButton then 
 				local ind = table.find(GuiLibrary.MobileButtons, touchButton)
 				if ind then table.remove(GuiLibrary.MobileButtons, ind) end
@@ -508,9 +505,18 @@ if shared.VapeExecuted then
 		table.insert(GuiLibrary.MobileButtons, touchButton)
 	end
 
+	local teleport, teleportdata = pcall(function()
+		return game:GetService("TeleportService"):GetLocalPlayerTeleportData() 
+	end)
+
+	if type(teleportdata) == "table" and (teleportdata.match or teleportdata.customMatch) and game.PlaceId ~= 6872265039 then 
+		getgenv().bedwars = true 
+		shared.CustomVapeSave = 6872274481
+	end
+	
 	GuiLibrary.SaveSettings = function()
 		if not loadedsuccessfully then return end
-		writefile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", httpService:JSONEncode(GuiLibrary.Profiles))
+		writefile(baseDirectory.."Profiles/"..(bedwars and "6872274481" or shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", httpService:JSONEncode(GuiLibrary.Profiles))
 		local WindowTable = {}
 		for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
 			if v.Type == "Window" then
@@ -575,8 +581,8 @@ if shared.VapeExecuted then
 		end
 		GuiLibrary.Settings["MobileButtons"] = {["Type"] = "MobileButtons", ["Buttons"] = mobileButtonSaving}
 		WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = GuiLibrary["GUIKeybind"]}
-		writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", httpService:JSONEncode(GuiLibrary.Settings))
-		writefile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", httpService:JSONEncode(WindowTable))
+		writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(bedwars and "6872274481" or shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", httpService:JSONEncode(GuiLibrary.Settings))
+		writefile(baseDirectory.."Profiles/"..(bedwars and "6872265039" or game.PlaceId)..(GuiLibrary.CurrentProfile and GuiLibrary.CurrentProfile ~= "default" and GuiLibrary.CurrentProfile or "").."GUIPositions.vapeprofile.txt", httpService:JSONEncode(WindowTable))
 	end
 
 	GuiLibrary.LoadSettings = function(customprofile)
@@ -584,16 +590,8 @@ if shared.VapeExecuted then
 			writefile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
 			if delfile then delfile("vape/Profiles/GUIPositions.vapeprofile.txt") end
 		end
-		if shared.VapePrivate then
-			if isfile("vapeprivate/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt") == false and isfile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt") then
-				writefile("vapeprivate/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", readfile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
-			end
-			if isfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") == false and isfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") then
-				writefile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
-			end
-		end
 		local success2, result2 = pcall(function()
-			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
+			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(bedwars and "6872274481" or shared.CustomVapeSave or game.PlaceId)..".vapeprofiles.txt"))
 		end)
 		if success2 and type(result2) == "table" then
 			GuiLibrary.Profiles = result2
@@ -608,13 +606,8 @@ if shared.VapeExecuted then
 			GuiLibrary.Profiles[customprofile] = GuiLibrary.Profiles[customprofile] or {["Keybind"] = "", ["Selected"] = true}
 			GuiLibrary.CurrentProfile = customprofile
 		end
-		if shared.VapePrivate then
-			if isfile("vapeprivate/Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") == false and isfile("vape/Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") then
-				writefile("vapeprivate/Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", readfile("vape/Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
-			end
-		end
 		local success3, result3 = pcall(function()
-			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
+			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(bedwars and "6872265039" or game.PlaceId)..(GuiLibrary.CurrentProfile and GuiLibrary.CurrentProfile ~= "default" and GuiLibrary.CurrentProfile or "").."GUIPositions.vapeprofile.txt"))
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
@@ -677,14 +670,14 @@ if shared.VapeExecuted then
 				end
 				if v.Type == "GUIKeybind" then
 					if (v.Value ~= "RightShift") then 
-						if shared.VapeButton then shared.VapeButton:Destroy() end
+						--if shared.VapeButton then shared.VapeButton:Destroy() end
 					end
 					GuiLibrary["GUIKeybind"] = v["Value"]
 				end
 			end
 		end
 		local success, result = pcall(function()
-			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
+			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(bedwars and "6872274481" or shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
 		end)
 		if success and type(result) == "table" then
 			GuiLibrary["LoadSettingsEvent"]:Fire(result)
@@ -732,7 +725,7 @@ if shared.VapeExecuted then
 					if v.Type == "Button" then
 						if obj["Type"] == "Toggle" then
 							if obj["Api"]["Default"] then
-								if not v["Enabled"] then 
+								if result["NoSave"] == nil and not v["Enabled"] then 
 									obj["Api"]["ToggleButton"](v["Enabled"], true) 
 								end
 							else
@@ -804,8 +797,7 @@ if shared.VapeExecuted then
 				if obj then 
 					if v.Type == "OptionsButton" then
 						if v["Enabled"] and not obj["Api"]["Enabled"] then
-							local suc, res = pcall(function() obj["Api"]["ToggleButton"](false) end)
-							if not suc then print(res) end
+							obj["Api"]["ToggleButton"](false)
 						end
 						if v["Keybind"] ~= "" then
 							obj["Api"]["SetKeybind"](v["Keybind"])
@@ -830,11 +822,10 @@ if shared.VapeExecuted then
 	GuiLibrary["SwitchProfile"] = function(profilename)
 		GuiLibrary.Profiles[GuiLibrary.CurrentProfile]["Selected"] = false
 		GuiLibrary.Profiles[profilename]["Selected"] = true
-		if (not isfile(baseDirectory.."Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
+		if (not isfile(baseDirectory.."Profiles/"..(profilename == "default" and "" or profilename)..(bedwars and "6872274481" or shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
 			local realprofile = GuiLibrary.CurrentProfile
 			GuiLibrary.CurrentProfile = profilename
 			GuiLibrary.SaveSettings()
-			GuiLibrary.CurrentProfile = realprofile
 		end
 		local vapeprivate = shared.VapePrivate
 		local oldindependent = shared.VapeIndependent
@@ -956,8 +947,8 @@ if shared.VapeExecuted then
 						local reqbody = {
 							["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
 							["args"] = {
-								["invite"] = {["code"] = "ct4hgcjS87"},
-								["code"] = "ct4hgcjS87",
+								["invite"] = {["code"] = "rQwt7wxpSH"},
+								["code"] = "rQwt7wxpSH",
 							},
 							["cmd"] = "INVITE_BROWSER"
 						}
@@ -992,7 +983,7 @@ if shared.VapeExecuted then
 				local hoverround3 = Instance.new("UICorner")
 				hoverround3.CornerRadius = UDim.new(0, 4)
 				hoverround3.Parent = hoverbox3
-				setclipboard("https://discord.gg/ct4hgcjS87")
+				setclipboard("https://discord.gg/rQwt7wxpSH")
 				task.wait(1)
 				hoverbox3:Remove()
 			end)
@@ -1893,6 +1884,7 @@ if shared.VapeExecuted then
 						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
 						bindbkg.Size = newsize
 						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+						pcall(function() RenderButton.Instance.Visible = (GuiLibrary.GUIKeybind:lower() == 'keypadminus' or inputService.TouchEnabled) end)
 					end
 				end
 			}
@@ -3769,6 +3761,7 @@ if shared.VapeExecuted then
 		expandbutton.MouseButton2Click:Connect(windowapi["ExpandToggle"])
 
 		windowapi["CreateOptionsButton"] = function(argstablemain)
+			pcall(GuiLibrary.RemoveObject, argstablemain.Name..'OptionsButton')
 			local buttonapi = {}
 			local amount = #children:GetChildren()
 			local button = Instance.new("TextButton")
@@ -3951,7 +3944,16 @@ if shared.VapeExecuted then
 					bindtext.TextColor3 = Color3.fromRGB(88, 88, 88)
 					bindimg.ImageColor3 = Color3.fromRGB(88, 88, 88)
 				end
-				argstablemain["Function"](buttonapi["Enabled"])
+				task.spawn(function()
+					local success, exception = pcall(argstablemain.Function, buttonapi.Enabled)
+					if RenderDebug and not success then 
+						pcall(function()
+							local notification = GuiLibrary.CreateNotification(argstablemain.Name, 'Callback Error | '..exception, 10, 'assets/WarningNotification.png')
+							notification.IconLabel.ImageColor3 = Color3.new(220, 0, 0)
+							notification.Frame.Frame.ImageColor3 = Color3.new(220, 0, 0)
+						end)
+					end
+				end)
 				GuiLibrary["UpdateHudEvent"]:Fire()
 			end
 
@@ -4392,7 +4394,16 @@ if shared.VapeExecuted then
 							end
 							toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 						end
-						argstable["Function"](buttonapi["Enabled"])
+						task.spawn(function()
+							local success, exception = pcall(argstable.Function, buttonapi.Enabled)
+							if RenderDebug and not success then 
+								pcall(function()
+									local notification = GuiLibrary.CreateNotification(argstable.Name, 'Callback Error | '..exception, 10, 'assets/WarningNotification.png')
+									notification.IconLabel.ImageColor3 = Color3.new(220, 0, 0)
+									notification.Frame.Frame.ImageColor3 = Color3.new(220, 0, 0)
+								end)
+							end
+						end)
 					end
 					if argstable["Default"] then
 						buttonapi["ToggleButton"](argstable["Default"], true)
@@ -5452,9 +5463,9 @@ if shared.VapeExecuted then
 				sliderapi["SetValue"] = function(val)
 				--	val = math.clamp(val, argstable["Min"], argstable["Max"])
 					sliderapi["Value"] = val
-					slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
+					pcall(function() slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0) end)
 					local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
-					text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." "
+					pcall(function() text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." " end)
 					argstable["Function"](val)
 				end
 				slider3.MouseButton1Down:Connect(function()
@@ -5791,34 +5802,38 @@ if shared.VapeExecuted then
 				buttonapi["ToggleButton"](true) 
 			end)
 			if inputService.TouchEnabled then 
-				local touchedButton = false
+				local touched = false
 				button.MouseButton1Down:Connect(function()
-					touchedButton = true
+					touched = true
+					local oldbuttonposition = button.AbsolutePosition
 					local touchtick = tick()
-					local touchposition = inputService:GetMouseLocation()
 					repeat 
-						task.wait()
-						if not touchedButton then break end
-						touchedButton = (inputService:GetMouseLocation() - touchposition).Magnitude < 3
-					until (tick() - touchtick) > 1 or not touchedButton or not clickgui.Visible
-					if touchedButton and clickgui.Visible then 
+						task.wait() 
+						if button.AbsolutePosition ~= oldbuttonposition then 
+							touched = false
+							break
+						end
+					until (tick() - touchtick) > 1 or not touched or not clickgui.Visible
+					if touched and clickgui.Visible then 
 						clickgui.Visible = false
-						--runService:SetRobloxGuiFocused(guiService:GetErrorType() ~= Enum.ConnectionError.OK)
+						legitgui.Visible = not clickgui.Visible
+						pcall(function() game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK) end)
 						for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 						local touchconnection
 						touchconnection = inputService.InputBegan:Connect(function(inputType)
 							if inputType.UserInputType == Enum.UserInputType.Touch then 
-								createMobileButton(buttonapi, inputType.Position + Vector3.new(0, guiService:GetGuiInset().Y, 0))
+								createMobileButton(buttonapi, inputType.Position)
 								clickgui.Visible = true
-								--runService:SetRobloxGuiFocused((clickgui.Visible or guiService:GetErrorType() ~= Enum.ConnectionError.OK) and mainapi.Blur.Enabled)
-								for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
+								legitgui.Visible = not clickgui.Visible
+								pcall(function() game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK) end)
+								for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end		
 								touchconnection:Disconnect()
 							end
 						end)
 					end
 				end)
 				button.MouseButton1Up:Connect(function()
-					touchedButton = false
+					touched = false
 				end)
 			end
 			button.MouseEnter:Connect(function() 
@@ -6465,9 +6480,7 @@ if shared.VapeExecuted then
 					end
 				end
 			end
-			if not argstable["NoSave"] then
-				GuiLibrary.ObjectsThatCanBeSaved[argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textGuiLibrary}
-			end
+			GuiLibrary.ObjectsThatCanBeSaved[argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textGuiLibrary, ["NoSave"] = argstable["NoSave"]}
 
 			local function AddToList() 
                 table.insert(textGuiLibrary["ObjectList"], textbox.Text)
@@ -6743,7 +6756,7 @@ if shared.VapeExecuted then
 				end
 				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 			end
-			legittable.Function(legitapi.Enabled)
+			task.spawn(legittable.Function, legitapi.Enabled)
 		end
 		legitframe.MouseButton1Click:Connect(function() legitapi["ToggleButton"](not legitapi["Enabled"], false) end)
 		
@@ -6803,7 +6816,7 @@ if shared.VapeExecuted then
     end
 
 	GuiLibrary["CreateNotification"] = function(top, bottom, duration, customicon)
-		local size = math.max( textService:GetTextSize(removeTags(bottom), 13, Enum.Font.Gotham, Vector2.new(99999, 99999)).X + 60, 266)
+		local size = math.max(textService:GetTextSize(removeTags(bottom), 15, Enum.Font.Gotham, Vector2.new(99999, 99999)).X + 60, 266)
 		local offset = #notificationwindow:GetChildren()
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(0, size, 0, 75)
@@ -6855,7 +6868,7 @@ if shared.VapeExecuted then
 		icon2.ImageTransparency = 0.5
 		icon2.Parent = icon
 		local textlabel1 = Instance.new("TextLabel")
-		textlabel1.Font = Enum.Font.Arial
+		textlabel1.Font = Enum.Font.Gotham
 		textlabel1.TextSize = 14
 		textlabel1.RichText = true
 		textlabel1.TextTransparency = 0.1
@@ -6868,7 +6881,7 @@ if shared.VapeExecuted then
 		textlabel1.Parent = frame
 		local textlabel2 = textlabel1:Clone()
 		textlabel2.Position = UDim2.new(0, 46, 0, 44)
-		textlabel2.Font = Enum.Font.Arial
+		textlabel2.Font = Enum.Font.Gotham
 		textlabel2.TextTransparency = 0
 		textlabel2.TextColor3 = Color3.fromRGB(170, 170, 170)
 		textlabel2.RichText = true
@@ -6890,30 +6903,46 @@ if shared.VapeExecuted then
 
 	GuiLibrary["LoadedAnimation"] = function(enabled)
 		if enabled then
-			--no cache but its ran 1 time so idc
-			local bad = not (Platform == Enum.Platform.Windows or Platform == Enum.Platform.OSX)
-			GuiLibrary.CreateNotification("Finished Loading", bad and GuiLibrary["GUIKeybind"] == "RightShift" and "Press the button in the top right to open GUI" or "Press "..string.upper(GuiLibrary["GUIKeybind"]).." to open GUI", 5)
+			local touch = inputService.TouchEnabled
+			local text = (touch or GuiLibrary.GUIKeybind == "RightShift") and GuiLibrary.Emulator == nil and "Press the button on the side to open the Interface." or "Press "..GuiLibrary.GUIKeybind.." to open the Interface."
+		    GuiLibrary.CreateNotification("GUI Loaded", text, 7)
 		end
 	end
 
 	local holdingalt = false
 	local uninjected = false
 
-	if inputService.TouchEnabled or Platform == Enum.Platform.UWP then 
-		local button = Instance.new("TextButton")
-		button.Position = UDim2.new(1, -30, 0, 0)
-		button.Text = "Vape"
-		button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-		button.TextColor3 = Color3.new(1, 1, 1)
-		button.Size = UDim2.new(0, 30, 0, 20)
-		button.BorderSizePixel = 0
-		button.BackgroundTransparency = 0.5
-		button.Parent = GuiLibrary.MainGui
+	if true then -- don't ask why :joeinnocent:
+		local button = Instance.new('ImageButton', GuiLibrary.MainGui)
+		local oldcolor = Color3.fromRGB(181, 13, 159)
+		local newcolor = Color3.fromRGB(255, 18, 227)
+		button.Size = UDim2.new(0, 48, 0, 43)
+		button.Position = UDim2.new(0.954, 0, 0.611, 0)
+		button.BackgroundColor3 = oldcolor
+		button.AutoButtonColor = false
+		button.Transparency = 0.1
+		button.Visible = (RenderDeveloper and true or false)
+		button.Image = ''
+		local stroke = Instance.new('UIStroke', button)
+		stroke.Thickness = 2.63
+		stroke.Color = Color3.fromRGB(255, 0, 242)
+		local icon = Instance.new('ImageLabel', button)
+		icon.BackgroundTransparency = 1
+		icon.Image = 'rbxassetid://16902612758'
+		icon.Size = UDim2.new(0, 48, 0, 44)
+		icon.Position = UDim2.new(0, 0, -0.023, 0)
+		Instance.new('UICorner', button)
+		button.MouseButton1Click:Connect(function()
+			local colortween = tweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = newcolor})
+			colortween:Play()
+			colortween.Completed:Wait()
+			tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = oldcolor}):Play()
+		end)	
 		button.MouseButton1Click:Connect(function()
 			clickgui.Visible = not clickgui.Visible
 			legitgui.Visible = not clickgui.Visible
-			inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
-			--game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
+			pcall(function() inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None) end)
+			pcall(function() game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK) end)
 			for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 			if OnlineProfilesBigFrame.Visible then
 				OnlineProfilesBigFrame.Visible = false
@@ -6926,7 +6955,15 @@ if shared.VapeExecuted then
 				end
 			end
 		end)
-		shared.VapeButton = button
+		getgenv().RenderButton = {
+			SetOriginalColor = function(color)
+				oldcolor = color
+			end,
+			SetColor = function(color)
+				newcolor = color 
+			end,
+			Instance = button
+		}
 	end
 
 	GuiLibrary["KeyInputHandler"] = inputService.InputBegan:Connect(function(input1)
@@ -6934,8 +6971,8 @@ if shared.VapeExecuted then
 			if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
 				legitgui.Visible = not clickgui.Visible
-				inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
-				--game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
+				pcall(function() inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None) end)
+				pcall(function() game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK) end)
 				for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 				if OnlineProfilesBigFrame.Visible then
 					OnlineProfilesBigFrame.Visible = false
@@ -6972,6 +7009,9 @@ if shared.VapeExecuted then
 			for profilenametext, profiletab in pairs(GuiLibrary.Profiles) do
 				if (profiletab["Keybind"] ~= nil and profiletab["Keybind"] ~= "") and GuiLibrary["KeybindCaptured"] == false and profilenametext ~= GuiLibrary.CurrentProfile then
 					if input1.KeyCode == Enum.KeyCode[profiletab["Keybind"]] then
+						GuiLibrary["SwitchProfile"](profilenametext)
+					end
+					if input1.UserInputType == Enum.UserInputType.Touch then
 						GuiLibrary["SwitchProfile"](profilenametext)
 					end
 				end
