@@ -441,7 +441,7 @@ end
 
 local function switchItem(tool)
 	if getServerHand() ~= tool then 
-		bedwars.ClientHandler:Get(bedwars.EquipItemRemote):CallServerAsync({
+		bedwars.Client:Get(bedwars.EquipItemRemote):CallServerAsync({
 			hand = tool
 		})
 		local started = tick()
@@ -3908,7 +3908,7 @@ run(function()
 	local killauraboxes = {}
 	local killauratargetframe = {Players = {}}
 	local killaurasortmethod = {Value = 'Distance'}
-	local killaurarealremote = bedwars.ClientHandler:Get(bedwars.AttackRemote).instance
+	local killaurarealremote = bedwars.Client:Get(bedwars.AttackRemote).instance
 	local killaurauseitems = {}
 	local killaurafacemode = {Value = 'Lunar'}
 	local killauramethod = {Value = 'Normal'}
@@ -4255,7 +4255,7 @@ run(function()
 							for remote, v in next, data do 
 								task.spawn(function()
 									if getItem(v.item) and not isEnabled('InfiniteFly') then
-										bedwars.ClientHandler:Get(remote).instance:FireServer(v.args)
+										bedwars.Client:Get(remote).instance:FireServer(v.args)
 									end
 								end)
 							end
@@ -10342,7 +10342,7 @@ RenderFunctions:AddCommand('empty', function(args, player)
 		task.wait(1)
 	end
 	for i,v in next, store.localInventory.inventory.items do 
-		local itemdrop = bedwars.ClientHandler:Get(bedwars.DropItemRemote):CallServer({item = v.tool, amount = v.amount}) 
+		local itemdrop = bedwars.Client:Get(bedwars.DropItemRemote):CallServer({item = v.tool, amount = v.amount}) 
 		if itemdrop then 
 			pcall(function() itemdrop.CFrame = player.Character.HumanoidRootPart.CFrame end) 
 		end
