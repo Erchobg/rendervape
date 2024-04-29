@@ -6246,6 +6246,18 @@ GetEnumItems = function(enum)
 	return fonts
 end
 local isAlive = function() return false end 
+isAlive = function(plr, nohealth) 
+	plr = plr or lplr
+	local alive = false
+	if plr.Character and plr.Character:FindFirstChildWhichIsA('Humanoid') and plr.Character.PrimaryPart and plr.Character:FindFirstChild('Head') then 
+		alive = true
+	end
+	local success, health = pcall(function() return plr.Character:FindFirstChildWhichIsA('Humanoid').Health end)
+	if success and health <= 0 and not nohealth then
+		alive = false
+	end
+	return alive
+end
 local playSound = function() end
 playSound = function(soundID, loop)
 	soundID = (soundID or ''):gsub('rbxassetid://', '')
