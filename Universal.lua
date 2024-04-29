@@ -6213,6 +6213,7 @@ local function run(func) func() end
 local function runFunction(func) func() end
 local function runLunar(func) func() end
 ----[CORE FUNCTIONS]------
+local vec3 = Vector3.new
 local newcolor = function() return {Hue = 0, Sat = 0, Value = 0} end
 local GetEnumItems = function() return {} end
 GetEnumItems = function(enum)
