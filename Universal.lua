@@ -8363,7 +8363,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+--[[runFunction(function()
 	local Blink = {}
 	local BlinkRepeat = {}
 	local BlinkDuration = {Value = 0.5}
@@ -8421,7 +8421,7 @@ runFunction(function()
 		BlinkDuration.Object.Visible = BlinkRepeat.Enabled
 		BlinkDelay.Object.Visible = BlinkRepeat.Enabled 
 	end)
-end)
+end)--]]
 
 runFunction(function()
 	local CustomJump = {Enabled = false}
