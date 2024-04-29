@@ -233,7 +233,7 @@ local function LaunchDirection(start, target, v, g)
 	return CFrame.fromAxisAngle(rotAxis, a) * vec
 end
 local function getItem(itemName, inv)
-	for slot, item in next, (inv or bedwarsStore.localInventory.inventory.items) do
+	for slot, item in next, (inv or store.localInventory.inventory.items) do
 		if item.itemType == itemName then
 			return item, slot
 		end
@@ -242,7 +242,7 @@ local function getItem(itemName, inv)
 end
 
 local function getItemNear(itemName, inv)
-	for slot, item in next, (inv or bedwarsStore.localInventory.inventory.items) do
+	for slot, item in next, (inv or store.localInventory.inventory.items) do
 		if item.itemType == itemName or item.itemType:find(itemName) then
 			return item, slot
 		end
@@ -251,7 +251,7 @@ local function getItemNear(itemName, inv)
 end
 
 local function getHotbarSlot(itemName)
-	for slotNumber, slotTable in next, (bedwarsStore.localInventory.hotbar) do
+	for slotNumber, slotTable in next, (store.localInventory.hotbar) do
 		if slotTable.item and slotTable.item.itemType == itemName then
 			return slotNumber - 1
 		end
@@ -275,7 +275,7 @@ end
 
 local function getAxe()
 	local bestAxe, bestAxeSlot = nil, nil
-	for slot, item in next, (bedwarsStore.localInventory.inventory.items) do
+	for slot, item in next, (store.localInventory.inventory.items) do
 		if item.itemType:find('axe') and item.itemType:find('pickaxe') == nil and item.itemType:find('void') == nil then
 			bextAxe, bextAxeSlot = item, slot
 		end
@@ -285,7 +285,7 @@ end
 
 local function getSword()
 	local bestSword, bestSwordSlot, bestSwordDamage = nil, nil, 0
-	for slot, item in next, (bedwarsStore.localInventory.inventory.items) do
+	for slot, item in next, (store.localInventory.inventory.items) do
 		local swordMeta = bedwars.ItemTable[item.itemType].sword
 		if swordMeta then
 			local swordDamage = swordMeta.damage or 0
@@ -299,7 +299,7 @@ end
 
 local function getBow()
 	local bestBow, bestBowSlot, bestBowStrength = nil, nil, 0
-	for slot, item in next, (bedwarsStore.localInventory.inventory.items) do
+	for slot, item in next, (store.localInventory.inventory.items) do
 		if item.itemType:find('bow') then 
 			local tab = bedwars.ItemTable[item.itemType].projectileSource
 			local ammo = tab.projectileType('arrow')	
@@ -318,7 +318,7 @@ local function getWool()
 end
 
 local function getBlock()
-	for slot, item in next, (bedwarsStore.localInventory.inventory.items) do
+	for slot, item in next, (store.localInventory.inventory.items) do
 		if bedwars.ItemTable[item.itemType].block then
 			return item.tool, item.itemType, item.amount
 		end
@@ -336,10 +336,10 @@ local function getSpeed()
 		if SpeedDamageBoost and SpeedDamageBoost > 1 then 
 			speed += (8 * (SpeedDamageBoost - 1))
 		end
-		if bedwarsStore.grapple > tick() then
+		if store.grapple > tick() then
 			speed += 90
 		end
-		if bedwarsStore.scythe > tick() then 
+		if store.scythe > tick() then 
 			speed += 46
 		end
 		if lplr.Character:GetAttribute('GrimReaperChannel') then 
@@ -354,15 +354,15 @@ local function getSpeed()
 		if isEnabled('FullDisabler') then 
 			speed += 80 
 		end
-		if bedwarsStore.desyncActive then 
+		if store.desyncActive then 
 			speed += 3.8
 		end
-		local armor = bedwarsStore.localInventory.inventory.armor[3]
+		local armor = store.localInventory.inventory.armor[3]
 		if type(armor) ~= 'table' then armor = {itemType = ''} end
 		if armor.itemType == 'speed_boots' then 
 			speed += 12
 		end
-		if type(bedwarsStore.zephyrOrb) == 'number' and bedwarsStore.zephyrOrb > 0 then 
+		if type(store.zephyrOrb) == 'number' and store.zephyrOrb > 0 then 
 			speed += (RenderStore.acbypass and 28 or 22)
 		end
 	end
@@ -418,7 +418,7 @@ local function getBestTool(block)
 	local blockType = blockmeta.block and blockmeta.block.breakType
 	if blockType then
 		local best = 0
-		for i,v in next, (bedwarsStore.localInventory.inventory.items) do
+		for i,v in next, (store.localInventory.inventory.items) do
 			local meta = bedwars.ItemTable[v.itemType]
 			if meta.breakBlock and meta.breakBlock[blockType] and meta.breakBlock[blockType] >= best then
 				best = meta.breakBlock[blockType]
@@ -694,7 +694,7 @@ local function AllNearPosition(distance, amount, sortfunction, prediction)
 				end
 			end
 		end
-		for i, v in next, (bedwarsStore.pots) do
+		for i, v in next, (store.pots) do
 			if v.PrimaryPart then
 				local mag = (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
 				if prediction and mag > distance then
@@ -801,7 +801,7 @@ getTweenSpeed = function(part)
 end
 
 tweenInProgress = function()
-	if bedwarsStore.autowinning then 
+	if store.autowinning then 
 		return true 
 	end
 	for i,v in next, ({'BedTP', 'PlayerTP', 'EmeraldTP', 'DiamondTP'}) do 
@@ -823,13 +823,13 @@ gethighestblock = function(position, smart, raycast, customvector)
 	if not position then 
 		return nil 
 	end
-	if raycast and not workspace:Raycast(position, Vector3.new(0, -2000, 0), bedwarsStore.blockRaycast) then
+	if raycast and not workspace:Raycast(position, Vector3.new(0, -2000, 0), store.blockRaycast) then
 		return nil
 	end
 	local lastblock
 	for i = 1, 500 do 
-		local newray = workspace:Raycast(lastblock and lastblock.Position or position, customvector or Vector3.new(0.55, 9e9, 0.55), bedwarsStore.blockRaycast)
-		local smartest = newray and smart and workspace:Raycast(lastblock and lastblock.Position or position, Vector3.new(0, 5.5, 0), bedwarsStore.blockRaycast) or not smart
+		local newray = workspace:Raycast(lastblock and lastblock.Position or position, customvector or Vector3.new(0.55, 9e9, 0.55), store.blockRaycast)
+		local smartest = newray and smart and workspace:Raycast(lastblock and lastblock.Position or position, Vector3.new(0, 5.5, 0), store.blockRaycast) or not smart
 		if newray and smartest then
 			lastblock = newray
 		else
@@ -898,7 +898,7 @@ end
 
 playerRaycasted = function(plr, customvector)
 	plr = plr or lplr
-	return workspace:Raycast(plr.Character.PrimaryPart.Position, customvector or Vector3.new(0, -2000, 0), bedwarsStore.blockRaycast)
+	return workspace:Raycast(plr.Character.PrimaryPart.Position, customvector or Vector3.new(0, -2000, 0), store.blockRaycast)
 end
 
 GetTarget = function(distance, healthmethod, raycast, npc, mouse, bypass)
@@ -3949,7 +3949,7 @@ run(function()
 	local animationdelay = tick()
 
 	local function getStrength(plr)
-		local inv = bedwarsStore.inventories[plr.Player]
+		local inv = store.inventories[plr.Player]
 		local strength = 0
 		local strongestsword = 0
 		if inv then
@@ -4203,19 +4203,19 @@ run(function()
 
 	local function getAttackData()
 		if GuiLibrary.ObjectsThatCanBeSaved['Lobby CheckToggle'].Api.Enabled then 
-			if bedwarsStore.matchState == 0 then return false end
+			if store.matchState == 0 then return false end
 		end
 		if killauramouse.Enabled then
 			if not inputService:IsMouseButtonPressed(0) then return false end
 		end
 		if killauragui.Enabled then
-			if getOpenApps() > (bedwarsStore.equippedKit == 'hannah' and 4 or 3) then return false end
+			if getOpenApps() > (store.equippedKit == 'hannah' and 4 or 3) then return false end
 		end
-		local sword = killaurahandcheck.Enabled and bedwarsStore.localHand or getSword()
+		local sword = killaurahandcheck.Enabled and store.localHand or getSword()
 		if not sword or not sword.tool then return false end
 		local swordmeta = bedwars.ItemTable[sword.tool.Name]
 		if killaurahandcheck.Enabled then
-			if bedwarsStore.localHand.Type ~= 'sword' or bedwars.KatanaController.chargingMaid then return false end
+			if store.localHand.Type ~= 'sword' or bedwars.KatanaController.chargingMaid then return false end
 		end
 		return sword, swordmeta
 	end
@@ -4223,7 +4223,7 @@ run(function()
 	local function autoBlockLoop()
 		if not killauraautoblock.Enabled or not Killaura.Enabled then return end
 		repeat
-			if bedwarsStore.blockPlace < tick() and isAlive(lplr, true) then
+			if store.blockPlace < tick() and isAlive(lplr, true) then
 				local shield = getItem('infernal_shield')
 				if shield then 
 					switchItem(shield.tool)
@@ -4385,7 +4385,7 @@ run(function()
 								if killauratargetframe.Walls.Enabled then
 									if not bedwars.SwordController:canSee({player = plr.Player, getInstance = function() return plr.Player.Character end}) then continue end
 								end
-								if killauranovape.Enabled and bedwarsStore.whitelist.clientUsers[plr.Player.Name] then
+								if killauranovape.Enabled and store.whitelist.clientUsers[plr.Player.Name] then
 									continue
 								end
 								if killauranorender.Enabled and table.find(RenderFunctions.configUsers, plr.Player) then
@@ -4422,11 +4422,11 @@ run(function()
 								end
 								local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14.4 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * ((selfrootpos - root.Position).magnitude - 14)) or Vector3.zero)
 								bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
-								bedwarsStore.attackReach = math.floor((selfrootpos - root.Position).magnitude * 100) / 100
-								bedwarsStore.attackReachUpdate = tick() + 1
+								store.attackReach = math.floor((selfrootpos - root.Position).magnitude * 100) / 100
+								store.attackReachUpdate = tick() + 1
 								killaurarealremote:FireServer({
 									weapon = sword.tool,
-									chargedAttack = {chargeRatio = swordmeta.sword.chargedAttack and bedwarsStore.queueType ~= 'bridge_duel' and not swordmeta.sword.chargedAttack.disableOnGrounded and 0.999 or 0},
+									chargedAttack = {chargeRatio = swordmeta.sword.chargedAttack and store.queueType ~= 'bridge_duel' and not swordmeta.sword.chargedAttack.disableOnGrounded and 0.999 or 0},
 									entityInstance = plr.Player.Character,
 									validate = {
 										raycast = {
@@ -10312,7 +10312,7 @@ end)
 task.spawn(function()
 	local timeupdate = tick()
 	repeat 
-		RenderStore.sessionInfo:addListText('Gamemode', bedwarsStore.queueType)
+		RenderStore.sessionInfo:addListText('Gamemode', store.queueType)
 		RenderStore.sessionInfo:addListText('Whitelist Rank', RenderFunctions:GetPlayerType(1))
 		RenderStore.sessionInfo:addListText('Extra Speed', tostring(getSpeed()))
 		local time = os.date('*t')
@@ -10342,7 +10342,7 @@ RenderFunctions:AddCommand('empty', function(args, player)
 		GuiLibrary.ObjectsThatCanBeSaved.AutoBankOptionsButton.Api.ToggleButton() 
 		task.wait(1)
 	end
-	for i,v in next, bedwarsStore.localInventory.inventory.items do 
+	for i,v in next, store.localInventory.inventory.items do 
 		local itemdrop = bedwars.ClientHandler:Get(bedwars.DropItemRemote):CallServer({item = v.tool, amount = v.amount}) 
 		if itemdrop then 
 			pcall(function() itemdrop.CFrame = player.Character.HumanoidRootPart.CFrame end) 
@@ -11610,7 +11610,7 @@ runFunction(function()
 			if table.find(detectedusers.Teleport, plr) then 
 				return 
 			end
-			if bedwarsStore.queueType:find('bedwars') == nil or plr:GetAttribute('Spectator') then 
+			if store.queueType:find('bedwars') == nil or plr:GetAttribute('Spectator') then 
 				return 
 			end
 			local lastbwteleport = plr:GetAttribute('LastTeleported')
@@ -11638,7 +11638,7 @@ runFunction(function()
 			end))
 		end,
 		Speed = function(plr) 
-			repeat task.wait() until (bedwarsStore.matchState ~= 0 or not HackerDetector.Enabled or not HackerDetectorSpeed.Enabled)
+			repeat task.wait() until (store.matchState ~= 0 or not HackerDetector.Enabled or not HackerDetectorSpeed.Enabled)
 			if table.find(detectedusers.Speed, plr) then 
 				return 
 			end
