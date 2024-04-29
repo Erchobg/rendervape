@@ -935,7 +935,7 @@ GetTarget = function(distance, healthmethod, raycast, npc, mouse, bypass)
 			if not RenderFunctions:GetPlayerType(2, v) then 
 				continue
 			end
-			if not ({WhitelistFunctions:get(v)})[2] then
+			if not ({whitelist:get(v)})[2] then
 				continue
 			end
 			if not entityLibrary.isPlayerTargetable(v) then 
@@ -4819,8 +4819,8 @@ run(function()
 	killauranovape.Object.Visible = false
 	killauranorender.Object.Visible = false
 	task.spawn(function()
-		repeat task.wait() until WhitelistFunctions.Loaded
-		killauranovape.Object.Visible = WhitelistFunctions.LocalPriority ~= 0
+		repeat task.wait() until whitelist.loaded
+		killauranovape.Object.Visible = whitelist.LocalPriority ~= 0
 	end)
 	task.spawn(function()
 		repeat task.wait() until RenderFunctions.WhitelistLoaded
