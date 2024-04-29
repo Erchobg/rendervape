@@ -10991,11 +10991,11 @@ runFunction(function()
 		Name = 'AddFamousClan',
 		Function = function(call)
 			if call then
-				for i,v in autofamousclan.clan do
+				for i,v in pairs(autofamousclan.clan) do
 					table.insert(clanstonotify.ObjectList, v)
 				end
 			else
-				for i,v in autofamousclan.clan do
+				for i,v in pairs(autofamousclan.clan) do
 					table.remove(clanstonotify.ObjectList, v)
 				end
 			end
