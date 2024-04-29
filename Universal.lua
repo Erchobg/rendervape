@@ -6231,6 +6231,14 @@ local function run(func) func() end
 local function runFunction(func) func() end
 local function runLunar(func) func() end
 local newcolor = function() return {Hue = 0, Sat = 0, Value = 0} end
+local GetEnumItems = function() return {} end
+GetEnumItems = function(enum)
+	local fonts = {}
+	for i,v in next, Enum[enum]:GetEnumItems() do 
+		table.insert(fonts, v.Name) 
+	end
+	return fonts
+end
 getgenv().ria = (isfile('ria.json') and readfile('ria.json') or nil)
 task.spawn(function()
 	local function chatfunc(plr)
