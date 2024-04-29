@@ -10997,7 +10997,7 @@ runFunction(function()
 				end
 			else
 				for i,v in autofamousclan.clans do
-					table.remove(clanstonotify.ObjectList, v)
+					table.remove(clanstonotify.ObjectList, i)
 				end
 			end
 		end,
