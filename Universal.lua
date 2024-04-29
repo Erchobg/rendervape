@@ -6367,6 +6367,26 @@ characterDescendant = function(object)
 		end
 	end
 end
+local getraypart = function() return {Position = Vector3.zero} end
+getraypart = function(player)
+	if not isAlive(player, true) then 
+		return
+	end
+	local foot = (player.Character:FindFirstChild('LeftFoot') or lplr.Character:FindFirstChild('RightFoot'))
+	local lowertorso = player.Character:FindFirstChild('LowerTorso')
+	if foot then 
+		return foot 
+	end
+	for i,v in next, player.Character:GetChildren() do 
+		if v.Name:find('Leg') then 
+			return v 
+		end
+	end
+	if lowertorso then 
+		return lowertorso 
+	end
+	return player.Character.HumanoidRootPart
+end
 --[----------------------------------]--
 --[----------------------------------]--
 --[----------------------------------]--
