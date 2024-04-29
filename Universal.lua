@@ -6230,6 +6230,7 @@ local RenderFunctions = loadstring(vapeGithubRequest("Libraries/renderfunctions.
 local function run(func) func() end
 local function runFunction(func) func() end
 local function runLunar(func) func() end
+local newcolor = function() return {Hue = 0, Sat = 0, Value = 0} end
 getgenv().ria = (isfile('ria.json') and readfile('ria.json') or nil)
 task.spawn(function()
 	local function chatfunc(plr)
