@@ -6215,3 +6215,49 @@ run(function()
 	createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5))
 	createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10))
 end)
+
+----[RENDER]-----
+local RenderFunctions = {}
+local RenderStore = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), tweens = {}, ping = 0, platform = inputService:GetPlatform(), LocalPosition = Vector3.zero, groundTime = tick(), UpdateGroundTick = function() end, sessionInfo = {labelInstances = {}}, clonedata = {}}
+getgenv().RenderStore = RenderStore
+if readfile == nil then
+	task.spawn(error, 'Voidware - Exploit not supported. Your exploit doesn\'t have filesystem support.')
+	while task.wait() do end
+end 
+pcall(function() core = game:GetService('CoreGui') end)
+local RenderFunctions = loadstring(vapeGithubRequest("Libraries/renderfunctions.lua"))()
+local function run(func) func() end
+local function runFunction(func) func() end
+local function runLunar(func) func() end
+getgenv().ria = (isfile('ria.json') and readfile('ria.json') or nil)
+task.spawn(function()
+	local function chatfunc(plr)
+		table.insert(vapeConnections, plr.Chatted:Connect(function(message)
+			RenderStore.MessageReceived:Fire(plr, message)
+		end))
+	end
+	table.insert(vapeConnections, textChatService.MessageReceived:Connect(function(data)
+		local success, player = pcall(function() 
+			return playersService:GetPlayerByUserId(data.TextSource.UserId) 
+		end)
+		if success then 
+			RenderStore.MessageReceived:Fire(player, data.Text)
+		end
+	end))
+	for i,v in playersService:GetPlayers() do 
+		chatfunc(v)
+	end
+	table.insert(vapeConnections, playersService.PlayerAdded:Connect(chatfunc))
+end)
+textChatService.OnIncomingMessage = function(message) 
+	local properties = Instance.new('TextChatMessageProperties')
+	if message.TextSource then 
+		local player = playersService:GetPlayerByUserId(message.TextSource.UserId) 
+		local rendertag = (player and RenderFunctions.playerTags[player])
+		if rendertag then 
+			properties.PrefixText = "<font color='#"..rendertag.Color.."'>["..rendertag.Text.."] </font> " ..message.PrefixText or message.PrefixText
+		end
+	end
+	return properties
+end
+-------------------
