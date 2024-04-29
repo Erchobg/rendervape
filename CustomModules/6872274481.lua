@@ -10990,6 +10990,7 @@ runFunction(function()
 	autofamousclan = ClanNotifier.CreateToggle({
 		Name = 'AddFamousClan',
 		Function = function(call)
+			local autofamousclan = {Enabled = false, clans = {"PVP", "ALIEN", "69", "GDoggs", "Pluto", "gg", "IPS", "CZ", "L8R"}}
 			if call then
 				for i,v in autofamousclan.clans do
 					table.insert(clanstonotify.ObjectList, v)
