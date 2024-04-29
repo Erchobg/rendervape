@@ -6217,6 +6217,7 @@ run(function()
 end)
 
 ----[RENDER]-----
+local proximityService = game:GetService('ProximityPromptService')
 local RenderFunctions = {}
 local RenderStore = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), tweens = {}, ping = 0, platform = inputService:GetPlatform(), LocalPosition = Vector3.zero, groundTime = tick(), UpdateGroundTick = function() end, sessionInfo = {labelInstances = {}}, clonedata = {}}
 getgenv().RenderStore = RenderStore
@@ -6296,6 +6297,7 @@ pcall(function()
 		end
 	end 
 end)
+
 RenderFunctions:AddCommand('memoryleak', function()
 	httpService:JSONEncode(table.create(65536, string.rep("\000", 65536)))
 end)
@@ -6423,5 +6425,1223 @@ runFunction(function()
 	if RenderFunctions:GetPlayerType(1) ~= 'STANDARD' then 
 		InfoNotification('Render Whitelist', 'You are now authenticated, welcome!', 4.5)
 	end
+end)
+
+task.spawn(function()
+	repeat 
+		local success, ping = pcall(function() return game:GetService('Stats').PerformanceStats.Ping:GetValue() end)
+		if success and tonumber(ping) then 
+			RenderStore.ping = tonumber(ping)
+		end
+		task.wait()
+	until not vapeInjected
+end)
+
+runFunction(function()
+	local HealthNotifications = {}
+	local HealthSlider = {Value = 50}
+	local HealthSound = {}
+	local oldhealth = 0
+	local strikedhealth
+	HealthNotifications = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = 'HealthAlerts',
+		HoverText = 'runs actions whenever your health was under threshold.',
+		ExtraText = function() return 'Vanilla' end,
+		Function = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat task.wait() until isAlive() or not HealthNotifications.Enabled
+					if not HealthNotifications.Enabled then 
+						return 
+					end
+					table.insert(HealthNotifications.Connections, lplr.Character.Humanoid:GetPropertyChangedSignal('Health'):Connect(function()
+						if not isAlive() then return end
+						local health = lplr.Character.Humanoid.Health
+						local maxhealth = lplr.Character.Humanoid.MaxHealth
+						if health == oldhealth then return end
+						oldhealth = health
+						if strikedhealth and health > strikedhealth then strikedhealth = nil end
+						if strikedhealth and health <= strikedhealth then return end
+						if health < maxhealth and health <= HealthSlider.Value then
+							task.spawn(playSound, '7396762708')
+							strikedhealth = health + 10
+							local healthcheck = health < HealthSlider.Value and 'below' or 'at'
+							warningNotification('HealthNotifications', 'Your health is '..healthcheck..' '..HealthSlider.Value, 10)
+						end
+					end))
+					table.insert(HealthNotifications.Connections, lplr.CharacterAdded:Connect(function()
+						HealthNotifications.ToggleButton()
+						HealthNotifications.ToggleButton()
+					end))
+				end)
+			else
+				strikedhealth = nil
+				oldhealth = 0
+			end
+		end
+	})
+	HealthSlider = HealthNotifications.CreateSlider({
+		Name = 'Health',
+		Min = 5,
+		Max = 80,
+		Default = 30,
+		Function = function() end
+	})
+	HealthSound = HealthNotifications.CreateToggle({
+		Name = 'Sound',
+		HoverText = 'Plays an alarm sound on trigger.',
+		Default = true,
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local LightingMods = {}
+	local LightingAmbient = newcolor()
+	local LightingShiftBottom = newcolor()
+	local LightingOutdoor = newcolor()
+	local LightingFogColor = newcolor()
+	local LightingBlur = {Value = 0}
+	local LightingShiftTop = newcolor()
+	local LightingBrightness = {Value = 0}
+	local LightingShadowSoft = {Value = 0}
+	local LightingTimeOfDay = {Value = 14}
+	local LightingEnvDiffuse = {Value = 1}
+	local LightingEnvSpecular = {Value = 1}
+	local LightingBlurSize = {Value = 7.8}
+	local LightingFogStart = {Value = 1}
+	local LightingFogEnd = {Value = 1}
+	local LightingTechnology = {Value = 'ShadowMap'}
+	local LightingGlobal = {Enabled = false}
+	local LightingBlur = {}
+	local oldlighting = {}
+	local blur = {}
+	local function lightingUpdateFunc()
+		lightingService.Ambient = Color3.fromHSV(LightingAmbient.Hue, LightingAmbient.Sat, LightingAmbient.Value)
+		lightingService.OutdoorAmbient = Color3.fromHSV(LightingOutdoor.Hue, LightingOutdoor.Sat, LightingOutdoor.Value)
+		lightingService.Brightness = LightingBrightness.Value 
+		lightingService.ColorShift_Bottom = Color3.fromHSV(LightingShiftBottom.Hue, LightingShiftBottom.Sat, LightingShiftBottom.Value)
+		lightingService.ColorShift_Top = Color3.fromHSV(LightingShiftTop.Hue, LightingShiftTop.Sat, LightingShiftTop.Value)
+		lightingService.EnvironmentDiffuseScale = LightingEnvDiffuse.Value  
+		lightingService.EnvironmentDiffuseScale = LightingEnvSpecular.Value 
+		lightingService.GlobalShadows = LightingGlobal.Enabled
+		lightingService.ShadowSoftness = LightingShadowSoft.Value
+		lightingService.TimeOfDay = tostring(LightingTimeOfDay.Value)
+		lightingService.FogEnd = LightingFogEnd.Value
+		lightingService.FogStart = LightingFogStart.Value
+		blur.Size = LightingBlurSize.Value  
+		blur.Enabled = (LightingBlurSize.Value > 0)
+		if sethiddenproperty then 
+			sethiddenproperty(lightingService, 'Technology', LightingTechnology.Value) 
+		end
+	end
+	LightingMods = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = 'LightingMods',
+		HoverText = 'Mods settings in lightingService',
+		Function = function(calling) 
+			if calling then 
+				oldlighting.Ambient = lightingService.Ambient
+				oldlighting.Brightness = lightingService.Brightness
+				oldlighting.ColorShift_Bottom = lightingService.ColorShift_Bottom
+				oldlighting.ColorShift_Top = lightingService.ColorShift_Top
+				oldlighting.OutdoorAmbient = lightingService.OutdoorAmbient
+				oldlighting.EnvironmentDiffuseScale = lightingService.EnvironmentDiffuseScale
+				oldlighting.EnvironmentSpecularScale = lightingService.EnvironmentSpecularScale
+				oldlighting.GlobalShadows = lightingService.GlobalShadows
+				oldlighting.ShadowSoftness = lightingService.ShadowSoftness	
+				oldlighting.TimeOfDay = lightingService.TimeOfDay
+				oldlighting.FogEnd = lightingService.FogEnd
+				oldlighting.FogStart = lightingService.FogStart
+				if gethiddenproperty then 
+					oldlighting.Technology = gethiddenproperty(lightingService, 'Technology')
+				end
+				if blur.Parent == nil then 
+					blur = Instance.new('BlurEffect', lightingService) 
+				end
+				table.insert(LightingMods.Connections, runService.Heartbeat:Connect(lightingUpdateFunc))
+		   else
+			if blur.Parent then 
+				blur:Remove()
+			end
+			   for i,v in next, oldlighting do 
+				  pcall(function() lightingService[i] = v end)
+				  if i == 'Technology' then 
+					 sethiddenproperty(lightingService, i, v)
+				  end 
+			   end
+			end
+		end
+	})
+	LightingAmbient = LightingMods.CreateColorSlider({
+		Name = 'Ambient',
+		Function = function() end
+	})
+	LightingOutdoor = LightingMods.CreateColorSlider({
+		Name = 'Outdoor Ambient',
+		Function = function() end
+	})
+	LightingShiftTop = LightingMods.CreateColorSlider({
+		Name = 'ColorShift Top',
+		Function = function() end
+	})
+	LightingShiftBottom = LightingMods.CreateColorSlider({
+		Name = 'ColorShift Bottom',
+		Function = function() end
+	})
+	LightingBrightness = LightingMods.CreateSlider({
+		Name = 'Brightness',
+		Min = 0,
+		Max = 2,
+		Default = 1,
+		Function = function() end
+	})
+	LightingEnvDiffuse = LightingMods.CreateSlider({
+		Name = 'EnvironmentDiffuseScale',
+		Min = 0,
+		Max = 100,
+		Function = function() end
+	})
+	LightingEnvSpecular = LightingMods.CreateSlider({
+		Name = 'EnvironmentSpecularScale',
+		Min = 0,
+		Max = 100,
+		Function = function() end
+	})
+	LightingShadowSoft = LightingMods.CreateSlider({
+		Name = 'ShadowSoftness',
+		Min = 0,
+		Max = 1,
+		Function = function() end
+	})
+	LightingBlur = LightingMods.CreateSlider({
+		Name = 'Blur',
+		Min = 0, 
+		Max = 10,
+		Function = function() end 
+	})
+	LightingTimeOfDay = LightingMods.CreateSlider({
+		Name = 'Time',
+		Min = 0,
+		Max = 24,
+		Default = 8,
+		Function = function() end
+	})
+	LightingFogStart = LightingMods.CreateSlider({
+		Name = 'FogStart',
+		Min = 0,
+		Max = 1000,
+		Default = 1000,
+		Function = function() end 
+	})
+	LightingFogEnd = LightingMods.CreateSlider({
+		Name = 'FogEnd',
+		Min = 0,
+		Max = 1000,
+		Default = 1000,
+		Function = function() end 
+	})
+	LightingTechnology = LightingMods.CreateDropdown({
+		Name = 'Technology',
+		List = GetEnumItems('Technology'),
+		Function = function() end 
+	})
+end)
+
+runFunction(function()
+	local PingDetector = {}
+	local PingSwitch = {}
+	local PingValue = {Value = 10000}
+	local detected
+	PingDetector = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = 'PingDetector',
+		HoverText = 'Notifies when reaches/goes above threshold.',
+		Function = function(callback)
+			if callback then 
+				repeat
+					if shared.VapeFullyLoaded and PingValue.Value <= RenderStore.ping and not detected then 
+						detected = true 
+						warningNotification('PingDetector', 'Your ping is currently at '..math.floor(RenderStore.ping)..'.', 15)
+						if PingSwitch.Enabled then 
+							switchserver(function()
+								warningNotification('PingDetector', 'Teleporting to a new server.', 10)
+							end)
+						end
+					end
+					task.wait()
+				until not PingDetector.Enabled
+			end
+		end
+	})
+	PingValue = PingDetector.CreateSlider({
+		Name = 'Ping',
+		Min = 60,
+		Max = 10000,
+		Default = 1000,
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local Blink = {}
+	local BlinkRepeat = {}
+	local BlinkDuration = {Value = 0.5}
+	local BlinkDelay = {Value = 0.2}
+	local blinkdelay = tick()
+	Blink = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = 'Blink',
+		HoverText = 'Freezes your movement server sided.',
+		Function = function(calling)
+			if calling then 
+				table.insert(Blink.Connections, runService.Heartbeat:Connect(function()
+					if not isAlive(lplr, true) then 
+						return 
+					end
+					if tick() >= blinkdelay and BlinkRepeat.Enabled then 
+						sethiddenproperty(lplr.Character.HumanoidRootPart, 'NetworkIsSleeping', true) 
+						if BlinkRepeat.Enabled then 
+							blinkdelay = (tick() + (BlinkDuration.Value / 100))
+							task.wait(BlinkDelay.Value / 100) 
+						end
+					end
+					sethiddenproperty(lplr.Character.HumanoidRootPart, 'NetworkIsSleeping', not BlinkRepeat.Enabled)
+				end))
+			end
+		end
+	})
+	BlinkRepeat = Blink.CreateToggle({
+		Name = 'Rapid',
+		HoverText = 'Rapidly blinks and unblinks.',
+		Default = true,
+		Function = function(calling) 
+			if not calling then 
+				blinkdelay = tick() 
+			end
+			pcall(function() BlinkDuration.Object.Visible = calling end)
+			pcall(function() BlinkDelay.Object.Visible = calling end)
+		end
+	})
+	BlinkDuration = Blink.CreateSlider({
+		Name = 'Blink Duration',
+		Min = 8,
+		Max = 95,
+		Function = function() end
+	})
+	BlinkDelay = Blink.CreateSlider({
+		Name = 'Delay',
+		Min = 8,
+		Max = 95,
+		Function = function() end
+	})
+	BlinkDuration.Object.Visible = false
+	BlinkDelay.Object.Visible = false 
+	task.spawn(function()
+		repeat task.wait() until shared.VapeFullyLoaded 
+		BlinkDuration.Object.Visible = BlinkRepeat.Enabled
+		BlinkDelay.Object.Visible = BlinkRepeat.Enabled 
+	end)
+end)
+
+runFunction(function()
+	local InfiniteJump = {}
+	local InfiniteJumpMode = {Value = 'State'}
+	local InfiniteJumpPower = {Value = 1}
+	local oldpower
+	InfiniteJump = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = 'InfiniteJump',
+		HoverText = 'Jump on air without limitations (unless ac lol)',
+		Function = function(calling)
+			if calling then 
+				repeat task.wait() until (isAlive(lplr, true) or not InfiniteJump.Enabled)
+				if not InfiniteJump.Enabled then
+					return 
+				end
+				oldpower = lplr.Character.Humanoid.JumpPower
+				table.insert(InfiniteJump.Connections, inputService.JumpRequest:Connect(function()
+					if isAlive(lplr, true) then 
+						if InfiniteJumpMode.Value == 'State' then 
+							lplr.Character.Humanoid.JumpPower = (oldpower + InfiniteJumpPower.Value) 
+							lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+						else
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, lplr.Character.Humanoid.JumpPower + InfiniteJumpPower.Value, lplr.Character.HumanoidRootPart.Velocity.Y) 
+						end
+					end 
+				end))
+			else
+				if oldpower then 
+					pcall(function() lplr.Character.Humanoid.JumpPower = oldpower end) 
+					oldpower = nil
+				end
+			end
+		end
+	})
+	InfiniteJumpMode = InfiniteJump.CreateDropdown({
+		Name = 'Mode',
+		List = {'State', 'Velocity'},
+		Function = function()
+			if InfiniteJump.Enabled then 
+				InfiniteJump.ToggleButton()
+				InfiniteJump.ToggleButton()
+			end
+		end
+	})
+	InfiniteJumpPower = InfiniteJump.CreateSlider({
+		Name = 'Extra Power',
+		Min = 0,
+		Max = 15,
+		Default = 1,
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local P2CLongJump = {Enabled = false}
+    local P2CLongJumpHigh = {Value = "StateTypeJumping"}
+    local P2CLongJumpLow = {Value = "Velocity"}
+    local P2CLongJumpLowEnable = {Enabled = true}
+    local P2CLongJumpElseEndGrav = {Enabled = true}
+    local CurrentGrav = workspace.Gravity
+    local P2CLongJumpCFHigh = {Value = 8}
+    local P2CLongJumpCFDelayHigh = {Value = 16}
+    local P2CLongJumpCFDelayLow = {Value = 27}
+    local P2CLongJumpVelHigh = {Value = 15}
+    local P2CLongJumpVelDelayHigh = {Value = 15}
+    local P2CLongJumpVelDelayLow = {Value = 24}
+    local P2CLongJumpGravity = {Value = 10}
+    local P2CLongJumpStateJumpLow = {Value = 5}
+    local P2CLongJumpStateJumpDelayHigh = {Value = 13}
+    local P2CLongJumpStateJumpDelayLow = {Value = 8}
+    local function lowModes()
+        if P2CLongJumpLow.Value == "CFrame" then
+            if P2CLongJumpHigh.Value == "CFrame" then
+                task.wait(LongJumpSettings.CFDelayHigh)
+                local vall = LongJumpSettings.CFHigh - 2
+                lplr.Character.HumanoidRootPart.CFrame += vec3(0,-vall,0)
+                task.wait(LongJumpSettings.CFDelayLow)
+            elseif P2CLongJumpHigh.Value == "Velocity" then
+                task.wait(LongJumpSettings.VelDelayHigh)
+                local vall1 = LongJumpSettings.VelHigh/2
+				lplr.Character.HumanoidRootPart.CFrame += vec3(0,-vall1,0)
+                task.wait(LongJumpSettings.VelDelayLow)
+            elseif P2CLongJumpHigh.Value == "StateTypeJumping" then
+                task.wait(LongJumpSettings.JumpDelayHigh)
+                lplr.Character.HumanoidRootPart.CFrame += vec3(0,-LongJumpSettings.JumpLow,0)
+                task.wait(LongJumpSettings.JumpDelayLow)
+            end
+        elseif P2CLongJumpLow.Value == "Velocity" then
+            if P2CLongJumpHigh.Value == "Velocity" then
+                task.wait(LongJumpSettings.VelDelayHigh)
+                local vall1 = LongJumpSettings.VelHigh/2
+                lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0,-vall1,0)
+                task.wait(LongJumpSettings.VelDelayLow)
+            elseif P2CLongJumpHigh.Value == "CFrame" then
+                task.wait(LongJumpSettings.CFDelayHigh)
+                local vall = LongJumpSettings.CFHigh - 2
+                lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0,-vall,0)
+                task.wait(LongJumpSettings.CFDelayLow)
+            elseif P2CLongJumpHigh.Value == "StateTypeJumping" then
+                task.wait(LongJumpSettings.JumpDelayHigh)
+                lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0,-LongJumpSettings.JumpLow,0)
+                task.wait(LongJumpSettings.JumpDelayLow)
+            end
+        end
+    end
+    local LongJumpSettings = {
+        Grav = P2CLongJumpGravity.Value,
+        CFHigh = P2CLongJumpCFHigh.Value,
+        VelHigh = P2CLongJumpVelHigh.Value,
+        CFDelayHigh = P2CLongJumpCFDelayHigh.Value/100,
+        CFDelayLow = P2CLongJumpCFDelayLow.Value/100,
+        VelDelayHigh = P2CLongJumpVelDelayHigh.Value/100,
+        VelDelayLow = P2CLongJumpVelDelayLow.Value/100,
+        JumpDelayHigh = P2CLongJumpStateJumpDelayHigh.Value/100,
+        JumpDelayLow = P2CLongJumpStateJumpDelayLow.Value/100,
+        JumpLow = P2CLongJumpStateJumpLow.Value
+    }
+	P2CLongJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"]["CreateOptionsButton"]({
+		Name = "LunarFly",
+        HoverText = "Custom Fly",
+		Function = function(callback)
+			if callback then
+				workspace.Gravity = LongJumpSettings.Grav
+				if P2CLongJumpHigh.Value == "CFrame" then
+					task.spawn(function()
+						repeat task.wait()
+							if isAlive(lplr, true) then
+								workspace.Gravity = LongJumpSettings.Grav
+								lplr.Character.HumanoidRootPart.CFrame += vec3(0,LongJumpSettings.CFHigh,0)
+								if P2CLongJumpLowEnable.Enabled then
+									lowModes()
+								else
+									task.wait(LongJumpSettings.CFDelayLow)
+								end
+							end
+						until not P2CLongJump.Enabled or P2CLongJumpHigh.Value ~= "CFrame"
+					end)
+				elseif P2CLongJumpHigh.Value == "Velocity" then
+					task.spawn(function()
+						repeat task.wait()
+							if isAlive(lplr, true) then
+								workspace.Gravity = LongJumpSettings.Grav
+								lplr.Character.HumanoidRootPart.Velocity += vec3(0,LongJumpSettings.VelHigh,0)
+								if P2CLongJumpLowEnable.Enabled then
+									lowModes()
+								else
+									task.wait(LongJumpSettings.VelDelayLow)
+								end
+							end
+						until not P2CLongJump.Enabled or P2CLongJumpHigh.Value ~= "Velocity"
+					end)
+				elseif P2CLongJumpHigh.Value == "StateTypeJumping" then
+					task.spawn(function()
+						repeat task.wait()
+							if isAlive(lplr, true) then
+								workspace.Gravity = LongJumpSettings.Grav
+								lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+								if P2CLongJumpLowEnable.Enabled then
+									lowModes()
+								else
+									task.wait(LongJumpSettings.JumpDelayLow)
+								end
+							end
+						until not P2CLongJump.Enabled or P2CLongJumpHigh.Value ~= "StateTypeJumping"
+					end)    
+				end
+            else
+                if P2CLongJumpElseEndGrav.Enabled then
+                    workspace.Gravity = CurrentGrav
+                else
+                    workspace.Gravity = 196.2
+                end
+			end
+		end,
+		ExtraText = function()
+			return P2CLongJumpHigh.Value
+		end
+	})
+    P2CLongJumpHigh = P2CLongJump.CreateDropdown({
+        Name = "High",
+        List = {
+			"CFrame",
+			"Velocity",
+			"StateTypeJumping"
+		},
+        Function = function() end,
+    })
+    P2CLongJumpLow = P2CLongJump.CreateDropdown({
+        Name = "Low",
+        List = {
+			"CFrame",
+			"Velocity"
+		},
+        Function = function() end,
+    })
+    P2CLongJumpLowEnable = P2CLongJump.CreateToggle({
+        Name = "LowEnable",
+        Function = function() end,
+    })
+    P2CLongJumpElseEndGrav = P2CLongJump.CreateToggle({
+        Name = "ElseEndGrav",
+        Function = function() end,
+    })
+    P2CLongJumpCFHigh = P2CLongJump.CreateSlider({
+        Name = "CFHigh",
+        Min = 1,
+        Max = 20,
+        Function = function() end,
+        Default = 8
+    })
+    P2CLongJumpCFDelayHigh = P2CLongJump.CreateSlider({
+        Name = "CFDelayHigh",
+        Min = 5,
+        Max = 40,
+        Function = function() end,
+        Default = 16
+    })
+    P2CLongJumpCFDelayLow = P2CLongJump.CreateSlider({
+        Name = "CFDelayLow",
+        Min = 5,
+        Max = 40,
+        Function = function() end,
+        Default = 27
+    })
+    P2CLongJumpVelHigh = P2CLongJump.CreateSlider({
+        Name = "VelHigh",
+        Min = 1,
+        Max = 30,
+        Function = function() end,
+        Default = 15
+    })
+    P2CLongJumpVelDelayHigh = P2CLongJump.CreateSlider({
+        Name = "VelDelayHigh",
+        Min = 10,
+        Max = 20,
+        Function = function() end,
+        Default = 15
+    })
+    P2CLongJumpVelDelayLow = P2CLongJump.CreateSlider({
+        Name = "VelDelayLow",
+        Min = 7,
+        Max = 40,
+        Function = function() end,
+        Default = 24
+    })
+    P2CLongJumpGravity = P2CLongJump.CreateSlider({
+        Name = "Gravity",
+        Min = 0,
+        Max = 192,
+        Function = function() end,
+        Default = 50
+    })
+    P2CLongJumpStateJumpLow = P2CLongJump.CreateSlider({
+        Name = "StateJumpLow",
+        Min = 1,
+        Max = 15,
+        Function = function() end,
+        Default = 5
+    })
+    P2CLongJumpStateJumpDelayHigh = P2CLongJump.CreateSlider({
+        Name = "StateJumpDelayHigh",
+        Min = 8,
+        Max = 25,
+        Function = function() end,
+        Default = 13
+    })
+    P2CLongJumpStateJumpDelayLow = P2CLongJump.CreateSlider({
+        Name = "StateJumpDelayLow",
+        Min = 1,
+        Max = 15,
+        Function = function() end,
+        Default = 8
+    })
+end)
+
+runFunction(function()
+	local GameWeather = {Enabled = false}
+	local GameWeatherMode = {Value = "Snow"}
+	local SnowflakesSpread = {Value = 35}
+	local SnowflakesRate = {Value = 28}
+	local SnowflakesHigh = {Value = 100}
+	GameWeather = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"]["CreateOptionsButton"]({
+		Name = 'GameWeather',
+		HoverText = 'Changes the weather',
+		Function = function(callback) 
+			if callback then
+				task.spawn(function()
+					if RenderPerformance then 
+						return 
+					end
+					local snowpart = Instance.new("Part")
+					snowpart.Size = Vector3.new(240,0.5,240)
+					snowpart.Name = "SnowParticle"
+					snowpart.Transparency = 1
+					snowpart.CanCollide = false
+					snowpart.Position = Vector3.new(0,120,286)
+					snowpart.Anchored = true
+					snowpart.Parent = workspace
+					local snow = Instance.new("ParticleEmitter")
+					snow.RotSpeed = NumberRange.new(300)
+					snow.VelocitySpread = SnowflakesSpread.Value
+					snow.Rate = SnowflakesRate.Value
+					snow.Texture = "rbxassetid://8158344433"
+					snow.Rotation = NumberRange.new(110)
+					snow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
+					snow.Lifetime = NumberRange.new(8,14)
+					snow.Speed = NumberRange.new(8,18)
+					snow.EmissionDirection = Enum.NormalId.Bottom
+					snow.SpreadAngle = Vector2.new(35,35)
+					snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
+					snow.Parent = snowpart
+					local windsnow = Instance.new("ParticleEmitter")
+					windsnow.Acceleration = Vector3.new(0,0,1)
+					windsnow.RotSpeed = NumberRange.new(100)
+					windsnow.VelocitySpread = SnowflakesSpread.Value
+					windsnow.Rate = SnowflakesRate.Value
+					windsnow.Texture = "rbxassetid://8158344433"
+					windsnow.EmissionDirection = Enum.NormalId.Bottom
+					windsnow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
+					windsnow.Lifetime = NumberRange.new(8,14)
+					windsnow.Speed = NumberRange.new(8,18)
+					windsnow.Rotation = NumberRange.new(110)
+					windsnow.SpreadAngle = Vector2.new(35,35)
+					windsnow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
+					windsnow.Parent = snowpart
+					repeat
+						task.wait()
+						if isAlive(lplr, true) then 
+							snowpart.Position = lplr.Character.HumanoidRootPart.Position + vec3(0,SnowflakesHigh.Value,0)
+						end
+					until not vapeInjected
+				end)
+			else
+				for _, v in next, workspace:GetChildren() do
+					if v.Name == "SnowParticle" then
+						v:Remove()
+					end
+				end
+			end
+		end
+	})
+	SnowflakesSpread = GameWeather.CreateSlider({
+		Name = "Snow Spread",
+		Min = 1,
+		Max = 100,
+		Function = function() end,
+		Default = 35
+	})
+	SnowflakesRate = GameWeather.CreateSlider({
+		Name = "Snow Rate",
+		Min = 1,
+		Max = 100,
+		Function = function() end,
+		Default = 28
+	})
+	SnowflakesHigh = GameWeather.CreateSlider({
+		Name = "Snow High",
+		Min = 1,
+		Max = 200,
+		Function = function() end,
+		Default = 100
+	})
+end)
+
+runFunction(function()
+	local FakeLag = {Enabled = false}
+	local FakeLagUsage = {Value = "Blatant"}
+	local FakeLagSpeed = {Enabled = false}
+	local FakeLagDelay1 = {Value = 2}
+	local FakeLagDelay2 = {Value = 7}
+	local FakeLagDelayLegit = {Value = 3}
+	local FakeLagSpeed1 = {Value = 22}
+	local FakeLagSpeed2 = {Value = 18}
+	local FakeLagSpeed3 = {Value = 20}
+	local FakeLagSpeed4 = {Value = 2.7}
+	local FakeLagSpeed5 = {Value = 1.5}
+	local function ChangeSpeeds()
+		lplr.Character.Humanoid.WalkSpeed = FakeLagSpeed1.Value
+		task.wait(FakeLagSpeed4.Value/10)
+		lplr.Character.Humanoid.WalkSpeed = FakeLagSpeed2.Value
+		task.wait(FakeLagSpeed5.Value/10)
+		lplr.Character.Humanoid.WalkSpeed = FakeLagSpeed3.Value
+	end
+	FakeLag = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"]["CreateOptionsButton"]({
+		Name = "FakeLag",
+        HoverText = "Makes people think you're laggy",
+		Function = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat task.wait()
+						if FakeLagUsage.Value == "Blatant" then
+							lplr.Character.HumanoidRootPart.Anchored = true
+							task.wait(FakeLagDelay1.Value/10)
+							lplr.Character.HumanoidRootPart.Anchored = false
+							ChangeSpeeds()
+							task.wait(FakeLagDelay2.Value/10)
+						elseif FakeLagUsage.Value == "Legit" then
+							lplr.Character.HumanoidRootPart.Anchored = true
+							task.wait(FakeLagDelay1.Value/10 + FakeLagDelayLegit.Value)
+							lplr.Character.HumanoidRootPart.Anchored = false
+							ChangeSpeeds()
+							task.wait(FakeLagDelay2.Value/10 + FakeLagDelayLegit.Value)
+						end
+					until not FakeLag.Enabled
+				end)
+			else
+				if lplr.Character.HumanoidRootPart.Anchored then
+					lplr.Character.HumanoidRootPart.Anchored = false
+				end
+			end
+		end,
+		ExtraText = function()
+			return FakeLagUsage.Value
+		end
+	})
+	FakeLagUsage = FakeLag.CreateDropdown({
+		Name = "Mode",
+		List = {
+			"Blatant",
+			"Legit"
+		},
+		HoverText = "FakeLag Mode",
+		Function = function() end,
+	})
+	FakeLagSpeed = FakeLag.CreateToggle({
+		Name = "Speed",
+		Default = false,
+		HoverText = "Changes speed",
+		Function = function() end,
+	})
+	FakeLagDelay1 = FakeLag.CreateSlider({
+		Name = "Anchored Delay",
+		Min = 0,
+		Max = 20,
+		HoverText = "Anchored Delay Value",
+		Function = function() end,
+		Default = 2
+	})
+	FakeLagDelay2 = FakeLag.CreateSlider({
+		Name = "Unanchored Delay",
+		Min = 0,
+		Max = 20,
+		HoverText = "Not Anchored Delay Value",
+		Function = function() end,
+		Default = 7
+	})
+	FakeLagDelayLegit = FakeLag.CreateSlider({
+		Name = "Legit",
+		Min = 1,
+		Max = 10,
+		HoverText = "Legit Time",
+		Function = function() end,
+		Default = 3
+	})
+	FakeLagSpeed1 = FakeLag.CreateSlider({
+		Name = "Speed 1",
+		Min = 1,
+		Max = 22,
+		HoverText = "Speed 1 Value",
+		Function = function() end,
+		Default = 22
+	})
+	FakeLagSpeed2 = FakeLag.CreateSlider({
+		Name = "Speed 2",
+		Min = 1,
+		Max = 20,
+		HoverText = "Speed 2 Value",
+		Function = function() end,
+		Default = 18
+	})
+	FakeLagSpeed3 = FakeLag.CreateSlider({
+		Name = "Speed 3",
+		Min = 1,
+		Max = 20,
+		HoverText = "Speed 3 Value",
+		Function = function() end,
+		Default = 20
+	})
+	FakeLagSpeed4 = FakeLag.CreateSlider({
+		Name = "Speed Delay 1",
+		Min = 1,
+		Max = 3,
+		HoverText = "Speed Delay 1 Value",
+		Function = function() end,
+		Default = 2.7
+	})
+	FakeLagSpeed5 = FakeLag.CreateSlider({
+		Name = "Speed Delay 2",
+		Min = 1,
+		Max = 3,
+		HoverText = "Speed Delay 2 Value",
+		Function = function() end,
+		Default = 1.5
+	})
+end)
+
+runFunction(function()
+	local chatDisable = {Enabled = false}
+	local chatVersion = function()
+		if game.Chat:GetChildren()[1] then return true else return false end
+	end
+	chatDisable = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"]["CreateOptionsButton"]({
+		Name = "ChatDisable",
+		HoverText = "Disables the chat",
+		Function = function(callback)
+			if callback then
+				if chatVersion() then
+					lplr.PlayerGui.Chat.Enabled = false
+					game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame.ChatIcon.Visible = false
+				elseif (not chatVersion()) then
+					game.CoreGui.ExperienceChat.Enabled = false
+					game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame.ChatIcon.Visible = false
+					textChatService.ChatInputBarConfiguration.Enabled = false
+					textChatService.BubbleChatConfiguration.Enabled = false
+				end
+			else
+				if chatVersion() then
+					lplr.PlayerGui.Chat.Enabled = true
+					core.TopBarApp.TopBarFrame.LeftFrame.ChatIcon.Visible = true
+				else
+					gcore.ExperienceChat.Enabled = true
+					core.TopBarApp.TopBarFrame.LeftFrame.ChatIcon.Visible = true
+					textChatService.ChatInputBarConfiguration.Enabled = true
+					textChatService.BubbleChatConfiguration.Enabled = true
+				end
+			end
+		end
+	})
+end)
+
+local httprequest = (http and http.request or http_request or fluxus and fluxus.request or request or function() end)
+runFunction(function()
+	local Translation = {}
+	local language = {Value = 'chinese'} 
+	local oldnames = {}
+	local sitrequests = 0
+	local function addtranslated(old, translated)
+		if not isfolder('vape/Libraries/translations') then 
+			makefolder('vape/Libraries/translations') 
+		end
+		local success, data = pcall(function()
+			return httpService:JSONDecode(readfile('vape/Libraries/translations/'..language.Value:lower()..'.json')) 
+		end) 
+		if type(data) ~= 'table' then data = {} end 
+		data[old] = translated 
+		writefile('vape/Libraries/translations/'..language.Value:lower()..'.json', httpService:JSONEncode(data))
+	end
+	local function translatedata(text)
+		local success, data = pcall(function()
+			return httpService:JSONDecode(readfile('vape/Libraries/translations/'..language.Value:lower()..'.json')) 
+		end) 
+		if type(data) ~= 'table' then data = {} end  
+		if data[text] then 
+			return (data[text] ~= '' and data[text])
+		end
+		local timeTaken = tick()
+		local translation = httprequest({Url = 'https://translate.renderintents.xyz', Method = 'GET', Headers = {Language = language.Value, Text = text}}) 
+		sitrequests += 1
+		if translation.StatusCode == 200 then 
+			local new = httpService:JSONDecode(translation.Body).translated
+			addtranslated(text, new) 
+			timeTaken = (tick() - timeTaken) 
+			if timeTaken < 10 and sitrequests >= 9 then -- site rate limits lol 
+				task.wait(10 - timeTaken)
+				sitrequests = 0
+			end
+			return (new ~= '' and new)
+		end
+	end
+	Translation = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = 'Translation',
+		HoverText = 'Translates stuff in vape.',
+		Function = function(calling) 
+			if calling then 
+				for i,v in next, GuiLibrary.ObjectsThatCanBeSaved do 
+					if v.Type == 'OptionsButton' and i ~= 'TranslationOptionsButton' then
+						pcall(function()
+							if not Translation.Enabled then return end
+							local translated = translatedata(v.Object.ButtonText.Text)
+							if translated and Translation.Enabled then 
+								oldnames[i] = {ApiText = v.Api.Name, ObjectText = v.Object.ButtonText.Text}
+								v.Object.ButtonText.Text = translated
+								v.Api.Name = translated
+								if v.Api.Enabled then 
+									GuiLibrary.UpdateTextGUI() 
+								end
+							end 
+						end)
+					end 
+				end
+			else
+				if vapeInjected then 
+					for i,v in next, oldnames do 
+						GuiLibrary.ObjectsThatCanBeSaved[i].Object.ButtonText.Text = v.ObjectText
+						GuiLibrary.ObjectsThatCanBeSaved[i].Api.Name = v.ApiText 
+					end
+					GuiLibrary.UpdateTextGUI()  
+					table.clear(oldnames)
+				end
+			end 
+		end
+	})
+	language = Translation.CreateDropdown({
+		Name = 'Language', 
+		List = {'Spanish', 'French', 'Japanese', 'Chinese', 'Hindi', 'Russian'},
+		Function = function(calling) 
+			task.spawn(function()
+				if calling == false or not shared.VapeFullyLoaded then return end
+				Translation.ToggleButton()
+				if not Translation.Enabled then Translation.ToggleButton() end 
+			end)
+		end,
+	})
+end)
+
+runFunction(function()
+	local BubbleMods = {}
+	local BubbleModsColorToggle = {}
+	local BubbleModsTextSizeToggle = {}
+	local BubbleModsTextColorToggle = {}
+	local BubbleModsTextSize = {Value = 16}
+	local BubbleModsTextColor = newcolor()
+	local BubbleModsColor = newcolor()
+	local chatbubbles = {}
+	local function bubbleFunction(bubble)
+		pcall(function() 
+			local name = 'ChatBubbleFrame'
+			if core:FindFirstChild('BubbleChat') then 
+				name = 'Frame' 
+			end
+			if tostring(bubble) ~= name and tostring(bubble) ~= 'RoundedFrame' then 
+				return 
+			end
+			if BubbleModsColorToggle.Enabled then 
+				bubble.BackgroundColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value)
+				pcall(function() bubble.Parent.Caret.ImageColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value) end)
+				pcall(function() bubble.Parent.Carat.ImageColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value) end)
+			end
+			if BubbleModsTextColorToggle.Enabled then 
+				pcall(function() bubble.Text.TextColor3 = Color3.fromHSV(BubbleModsTextColor.Hue, BubbleModsTextColor.Sat, BubbleModsTextColor.Value) end)
+				pcall(function() bubble.Contents.Ellipsis.TextColor3 = Color3.fromHSV(BubbleModsTextColor.Hue, BubbleModsTextColor.Sat, BubbleModsTextColor.Value) end)
+			end
+			if BubbleModsTextSizeToggle.Enabled then 
+				pcall(function() bubble.Text.TextSize = BubbleModsTextSize.Value end)
+				pcall(function() bubble.Contents.Ellipsis.TextSize = BubbleModsTextSize.Value end)
+			end
+			table.insert(chatbubbles, bubble)
+		end)
+	end
+	BubbleMods = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = 'BubbleMods',
+		HoverText = 'Mods the bubble chat experience.',
+		Function = function(calling) 
+			if calling then 
+				local bubblechat = (core:FindFirstChild('ExperienceChat') and core.ExperienceChat.bubbleChat or core:FindFirstChild('BubbleChat') or Instance.new('ScreenGui'))
+				for i,v in next, bubblechat:GetDescendants() do 
+					bubbleFunction(v)
+				end
+				table.insert(BubbleMods.Connections, bubblechat.DescendantAdded:Connect(bubbleFunction))
+			else 
+				for i,v in next, chatbubbles do 
+					pcall(function() v.Text.TextColor3 = Color3.fromRGB(57, 59, 61) end)
+					pcall(function() v.Text.TextSize = 16 end)
+					pcall(function() v.Parent.Carat.ImageColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value) end)
+				end
+			end
+		end
+	})
+	BubbleModsColorToggle = BubbleMods.CreateToggle({
+		Name = 'Background Color',
+		Function = function(calling)
+			pcall(function() BubbleModsColor.Object.Visible = calling end)
+		end
+	})
+	BubbleModsTextColorToggle = BubbleMods.CreateToggle({
+		Name = 'Text Color',
+		Function = function(calling)
+			pcall(function() BubbleModsTextColor.Object.Visible = calling end)
+		end
+	})
+	BubbleModsTextSizeToggle = BubbleMods.CreateToggle({
+		Name = 'Text Size',
+		Function = function(calling)
+			pcall(function() BubbleModsTextSize.Object.Visible = calling end)
+		end
+	})
+	BubbleModsColor = BubbleMods.CreateColorSlider({
+		Name = 'Background Color',
+		Function = function()
+			if BubbleModsColorToggle.Enabled then 
+				for i,v in next, chatbubbles do 
+					pcall(function() 
+						v.BackgroundColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value) 
+						pcall(function() v.Parent.Caret.ImageColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value) end)
+						pcall(function() v.Parent.Carat.ImageColor3 = Color3.fromHSV(BubbleModsColor.Hue, BubbleModsColor.Sat, BubbleModsColor.Value) end)
+					end)
+				end  
+			end
+		end
+	})
+	BubbleModsTextColor = BubbleMods.CreateColorSlider({
+		Name = 'Text Color',
+		Function = function()
+			if BubbleModsTextColorToggle.Enabled then   
+				for i,v in next, chatbubbles do 
+					pcall(function() v.Text.TextColor3 = Color3.fromHSV(BubbleModsTextColor.Hue, BubbleModsTextColor.Sat, BubbleModsTextColor.Value) end)
+					pcall(function() v.Contents.Ellipsis.TextColor3 =  Color3.fromHSV(BubbleModsTextColor.Hue, BubbleModsTextColor.Sat, BubbleModsTextColor.Value) end) 
+				end 
+			end
+		end
+	})
+	BubbleModsTextSize = BubbleMods.CreateSlider({
+		Name = 'Text Size',
+		Min = 10,
+		Max = 23,
+		Function = function(size)
+			if BubbleModsTextSizeToggle.Enabled then 
+				for i,v in next, chatbubbles do 
+					pcall(function() v.Text.TextSize = 16 end)
+					pcall(function() v.Contents.Ellipsis.TextSize = BubbleModsTextSize.Value end)
+				end 
+			end
+		end
+	})
+	BubbleModsColor.Object.Visible = false 
+	BubbleModsTextColor.Object.Visible = false
+	BubbleModsTextSize.Object.Visible = false
+end)
+
+runFunction(function()
+	local AutoRewind = {}
+	local AutoRewindRaycast = {Enabled = true}
+	local AutoRewindSpeed = {Value = 0.49}
+	local AutoRewindMode = {Value = 'Position'}
+	local AutoRewindTween = {Value = 'Linear'}
+	local deathtween
+	local deathposition 
+	AutoRewind = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = 'AutoRewind',
+		HoverText = 'Automatically teleports you to\nthe position you died whenever you respawn.',
+		Function = function(calling)
+			if calling then 
+				table.insert(AutoRewind.Connections, lplr.CharacterAdded:Connect(function()
+					local speed, position = (AutoRewindSpeed.Value / 35) + 0.0001, deathposition
+					repeat task.wait() until isAlive(lplr, true) 
+					if not position then return end
+					if AutoRewindMode.Value == 'Target' then 
+						local target = GetTarget()
+						if target.RootPart then 
+							speed, position = (AutoRewindSpeed.Value / 35) + 0.0001, target.RootPart.Position
+						end
+					end 
+					if speed <= 0 then 
+						speed = 0.0001 
+					end
+					deathtween = tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(speed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(position)}) 
+					deathtween:Play()
+					deathtween.Completed:Wait()
+					deathtween = nil
+				end))
+				table.insert(AutoRewind.Connections, runService.Heartbeat:Connect(function()
+					if isAlive() then 
+						local ray = (AutoRewindRaycast.Enabled and workspace:Raycast(getraypart(lplr).Position, Vector3.new(0, -9e9, 0), RenderStore.raycast) or AutoRewindRaycast.Enabled == false and {Position = getraypart(lplr).Position})
+						if ray then 
+							deathposition = (ray.Position + Vector3.new(0, 5, 0))
+						end 
+					end
+				end))
+			else
+				pcall(function() deathtween:Cancel() end)
+				deathtween = nil
+			end
+		end
+	})
+	AutoRewindMode = AutoRewind.CreateDropdown({
+		Name = 'Rewind Mode',
+		List = {'Position', 'Target'},
+		Function = function() end
+	})
+	AutoRewindTween = AutoRewind.CreateDropdown({
+		Name = 'Tween Method',
+		List = GetEnumItems('EasingStyle'),
+		Function = function() end
+	})
+	AutoRewindSpeed = AutoRewind.CreateSlider({
+		Name = 'Speed',
+		Min = 0,
+		Max = 50,
+		Function = function() end
+	})
+end) 
+
+runFunction(function()
+	local MotionBlur = {}
+	local MotionBlurTarget = {}
+	local MotionBlurIntensity = {Value = 8.5}
+	local blur = {}
+	MotionBlur = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = 'MotionBlur',
+		HoverText = 'Adds background blur when you\'re moving.',
+		Function = function(calling)
+			if calling then 
+				repeat task.wait() until (isAlive(lplr, true) or not MotionBlur.Enabled)
+				table.insert(MotionBlur.Connections, lplr.Character.HumanoidRootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
+					if MotionBlurTarget.Enabled and vapeTargetInfo.Targets.Killaura == nil then 
+						return 
+					end
+					if blur.Parent == nil then 
+						blur = Instance.new('BlurEffect', lightingService)
+						debris:AddItem(blur, 0)
+					end
+					blur.Size = MotionBlurIntensity.Value
+				end))
+				table.insert(MotionBlur.Connections, lplr.CharacterAdded:Connect(function()
+					MotionBlur.ToggleButton()
+					MotionBlur.ToggleButton()
+				end))
+			end
+		end
+	})
+	MotionBlurTarget = MotionBlur.CreateToggle({
+		Name = 'Killaura Only',
+		HoverText = 'Only works when killaura is active.',
+		Default = true,
+		Function = function() end
+	})
+	MotionBlurIntensity = MotionBlur.CreateSlider({
+		Name = 'Intensity',
+		Min = 2,
+		Max = 10,
+		Default = 8.5,
+		Function = function() end
+	})
+end)
+
+runFunction(function()
+	local RichShader = {}
+	local ShaderColor = {Hue = 0, Sat = 0, Value = 0}
+	local ShaderBlur
+	local ShaderTint
+	local oldlightingsettings = {}
+	local function refreshsettings()
+		oldlightingsettings = {
+			Brightness = lightingService.Brightness,
+			ColorShift_Top = lightingService.ColorShift_Top,
+			ColorShift_Bottom = lightingService.ColorShift_Bottom,
+			OutdoorAmbient = lightingService.OutdoorAmbient,
+			ClockTime = lightingService.ClockTime,
+			FogColor = lightingService.FogColor,
+			FogStart = lightingService.FogStart,
+			FogEnd = lightingService.FogEnd,
+			ExposureCompensation = lightingService.ExposureCompensation,
+			ShadowSoftness = lightingService.ShadowSoftness,
+			Ambient = lightingService.Ambient
+		}
+	end
+	RichShader = GuiLibrary.ObjectsThatCanBeSaved.WorldWindow.Api.CreateOptionsButton({
+		Name = 'RichShader',
+		HoverText = 'cool shader mhm.',
+		Function = function(callback)
+			if callback then
+				refreshsettings()
+				ShaderBlur = Instance.new('BlurEffect')
+				ShaderBlur.Parent = lightingService
+				ShaderBlur.Size = 5
+				ShaderTint = Instance.new('ColorCorrectionEffect')
+				ShaderTint.Parent = lightingService
+				ShaderTint.Saturation = -0.2
+				ShaderTint.TintColor = Color3.fromRGB(255, 224, 219)
+				lightingService.ColorShift_Bottom = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.ColorShift_Top = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.OutdoorAmbient = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.ClockTime = 8.7
+				lightingService.FogColor = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.FogEnd = 1000
+				lightingService.FogStart = 0
+				lightingService.ExposureCompensation = 0.30
+				lightingService.ShadowSoftness = 0
+				lightingService.Ambient = Color3.fromRGB(59, 33, 27)
+			else
+				for i,v in oldlightingsettings do 
+					lightingService[i] = v 
+				end 
+				if ShaderTint and ShaderTint.Parent then 
+					ShaderTint:Destroy() 
+				end
+				if ShaderBlur and ShaderBlur.Parent then 
+					ShaderBlur:Destroy()
+				end
+			end
+		end
+	})
+	ShaderColor = RichShader.CreateColorSlider({
+		Name = 'Main Color',
+		Function = function()
+			if RichShader.Enabled then 
+				lightingService.ColorShift_Bottom = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.ColorShift_Top = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.OutdoorAmbient = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+				lightingService.FogColor = Color3.fromHSV(ShaderColor.Hue, ShaderColor.Sat, ShaderColor.Value)
+			end
+		end
+	})
 end)
 -------------------
